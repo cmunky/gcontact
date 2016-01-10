@@ -26,7 +26,7 @@ define('SCOPES', implode(' ', array(
   "https://www.googleapis.com/auth/drive", "https://www.google.com/m8/feeds")
 ));
 
-print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME);
+// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME);
 
 if (php_sapi_name() != 'cli') {
   throw new Exception('This application must be run on the command line.');
@@ -129,7 +129,7 @@ function execute($request, $callback) {
   try {
     $response = $service->scripts->run(SCRIPT_ID, $request);
     if (!isErrorResponse($response)) {
-       call_user_func_array($callback, array($response));
+       return call_user_func_array($callback, array($response));
     }
   } catch (Exception $e) {
 
@@ -138,31 +138,24 @@ function execute($request, $callback) {
   }
 }
 
+function encodeResult($response) {
+  // The structure of the result will depend upon what the Apps Script function returns. 
+  // var_dump($resp);
+  $resp = $response->getResponse();
+  $result = $resp['result'];
+  return json_encode($result);
+}
+
 // -----------------
 function getContactList($groupName) {
   $request = createRequest('getContactList', array('g' => $groupName));
-  execute($request, 'extractResponseResult');
+  return execute($request, 'encodeResult');
 }
 
 function addContactToGroup($firstName,$lastName, $email, $groupName) {
   $request = createRequest('addContactToGroup', array('f' => $firstName, 'l' => $lastName, 'e' => $email, 'g' => $groupName ));
-  execute($request, 'extractResponseResult');
+  return execute($request, 'encodeResult');
 }
 
-function extractResponseResult($response) {
-    // The structure of the result will depend upon what the Apps Script function returns. 
-    $resp = $response->getResponse();
-    // var_dump($resp);
-    $result = $resp['result'];
-    if (count($result) == 0) {
-      print "No results returned!\n";
-    } else {
-      print "List of results returned:\n";
-      foreach($result as $id => $data) {
-        //printf("\t%s (%s)\n", $data, $id);
-        print_r($data);
-      }
-    }
-}
+echo getContactList('2011 South Calgary Garden');
 // -----------------
-getContactList('2011 South Calgary Garden');
