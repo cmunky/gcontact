@@ -132,7 +132,6 @@ function execute($request, $callback) {
        return call_user_func_array($callback, array($response));
     }
   } catch (Exception $e) {
-
     // The API encountered a problem before the script started executing.
     echo 'Caught exception: ', $e->getMessage(), "\n";
   }
@@ -156,6 +155,6 @@ function addContactToGroup($firstName,$lastName, $email, $groupName) {
   $request = createRequest('addContactToGroup', array('f' => $firstName, 'l' => $lastName, 'e' => $email, 'g' => $groupName ));
   return execute($request, 'encodeResult');
 }
+// -----------------
 
 echo getContactList('2011 South Calgary Garden');
-// -----------------
