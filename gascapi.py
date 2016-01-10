@@ -36,6 +36,7 @@ for file in dirs:
 import json
 with open('package.json') as data:    
     pkg = json.load(data)
+
 APPLICATION_NAME = "{0} ({1}-v{2})".format(pkg['description'], pkg['name'], pkg['version'])
 
 def ensure_credential_path():
@@ -51,7 +52,7 @@ CREDENTIAL_PATH = os.path.join(ensure_credential_path(), 'gascapi-py.json')
 
 SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds'
 
-print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME)
+# print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME)
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -71,10 +72,10 @@ def get_credentials():
             credentials = tools.run_flow(flow, store, flags)
         else: # Needed only for compatibility with Python 2.6
             credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
+        print('Storing credentials to ' + CREDENTIAL_PATH)
     return credentials
 
-def display_error():
+def display_error(response):
     """Displays the error results and stacktrace for an unsuccessful request
 
     Displays the error results and stacktrace for an unsuccessful request
@@ -95,18 +96,6 @@ def display_error():
             print("\t{0}: {1}".format(trace['function'],
                 trace['lineNumber']))
 
-def extract_results(response):
-    """Extracts results...
-    """
-    # The structure of the result will depend upon what the Apps Script function returns.
-    results = response['response'].get('result', {})
-    if not results:
-        print('No results returned!')
-    else:
-        print('List of results returned:')
-        for item in results:
-            print(item)
-    
 def get_service():
     # Authorize and create a service object.
     credentials = get_credentials()
@@ -114,18 +103,9 @@ def get_service():
     service = discovery.build('script', 'v1', http=http)
     return service
 
-def addContactToGroup(first_name, last_name, email, group_name):
-    request = {"function": "addContactToGroup", "parameters": 
-        [{"f": first_name, "l": last_name, "e": email   , "g": group_name, }] }
-    execute(request, extract_results)
-
-def getContactList(group_name):
-    request = {"function": "getContactList", "parameters": [{"g": group_name }] }
-    execute(request, extract_results)
-
-def addContact(group_name):
-    request = {"function": "addGroup", "parameters": [{"g": group_name }] }
-    execute(request, extract_results)
+def encode_result(response):
+    results = response['response'].get('result', {})
+    return json.dumps(results)
 
 def execute(request, callback):
     service = get_service()
@@ -135,17 +115,32 @@ def execute(request, callback):
                 scriptId=SCRIPT_ID).execute()
 
         if 'error' in response:
-            display_error()
+            display_error(response)
         else:
-            callback(response)
+            return callback(response)
 
     except errors.HttpError as e:
         # The API encountered a problem before the script started executing.
         print(e.content)
 
+# --------------------
+def addContactToGroup(first_name, last_name, email, group_name):
+    request = {"function": "addContactToGroup", "parameters": 
+        [{"f": first_name, "l": last_name, "e": email   , "g": group_name, }] }
+    return execute(request, encode_result)
+
+def getContactList(group_name):
+    request = {"function": "getContactList", "parameters": [{"g": group_name }] }
+    return execute(request, encode_result)
+
+def addContact(group_name):
+    request = {"function": "addGroup", "parameters": [{"g": group_name }] }
+    return execute(request, encode_result)
+# --------------------
+
 def main():
     # default function to verify configuration
-    getContactList('2011 South Calgary Garden')
+    print( getContactList('2011 South Calgary Garden') )
     
 if __name__ == '__main__':
     main()
