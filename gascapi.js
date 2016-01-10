@@ -46,7 +46,7 @@ function loadConfiguration() {
         }
       });
 
-      console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME);
+      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME);
       onConfigLoaded()
     });
   });
@@ -67,17 +67,17 @@ function onConfigLoaded() {
         { g: '2011 South Calgary Garden' }, 
         logResponseResult);
 
-      execMethod(auth,
+      /*execMethod(auth,
         'addContactToGroup', 
         { f: 'First Name', l: 'Last Name', g: '2013 South Calgary Garden', e: 'walter.white@empire.org' }, 
-        logResponseResult);
+        logResponseResult);*/
     });
   }); 
 }
 
 function logResponseResult(resp, caption) {
-  caption = caption || 'logResultResponse: ';
-  console.log(caption, resp.response.result);
+  var result = JSON.stringify(resp.response.result);
+  console.log(result);
 }
 
 /**
