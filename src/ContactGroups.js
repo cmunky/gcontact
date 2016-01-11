@@ -6,7 +6,7 @@
 // TODO: Move to Library ?!?!?!
 function errorMessage(err, msg, fcn, opt) {
   opt = opt || '';
-  var codes = { "Server Error": "500", "Not Found": "404", "Invalid argument": "400" };
+  var codes = { "Server Error": "500", "Not Found": "404", "Invalid Argument": "400", "Argument Required": "422" };
   var fn = fcn ? fcn.callee.toString().match(/function ([^\(]+)/)[1] : '';
   var m = fn.concat(': ', msg, ': ', opt);
   var o = {"error": err, "message": m };
