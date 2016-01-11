@@ -27,10 +27,10 @@ path = './config'
 dirs = os.listdir( path )
 for file in dirs:
     file = os.path.join(path, file)
-    if file.endswith('.id'):
+    if file.endswith('script.id'):
         with open(file, 'r') as data:
             SCRIPT_ID = data.read()
-    if file.endswith('.json'):
+    if file.endswith('auth_secret'):
         CLIENT_SECRET = file
 
 import json

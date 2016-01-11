@@ -38,10 +38,10 @@ function loadConfiguration() {
 
       files.forEach( function( file, index ) {
         file = path.concat('/', file);
-        if (file.endsWith('.id')) {
+        if (file.endsWith('script.id')) {
           SCRIPT_ID = fs.readFileSync(file).toString('UTF-8');
         }
-        if (file.endsWith('.json')) {
+        if (file.endsWith('auth_secret')) {
           CLIENT_SECRET = file
         }
       });
