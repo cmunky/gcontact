@@ -3,6 +3,18 @@
  *
  */ 
 
+// TODO: Move to Library ?!?!?!
+function errorMessage(err, msg, fcn, opt) {
+  opt = opt || '';
+  var codes = { "Server Error": "500", "Not Found": "404", "Invalid argument": "400" };
+  var fn = fcn ? fcn.callee.toString().match(/function ([^\(]+)/)[1] : '';
+  var m = fn.concat(': ', msg, ': ', opt);
+  var o = {"error": err, "message": m };
+  var c = codes[err];
+  if (c) { o.code = c; }
+  return o;
+}
+
 function addGroup(options) {
   var group = getGroup(options);
   Logger.log(group);
@@ -22,11 +34,13 @@ function addGroup(options) {
 
 function getGroup(options) {
   if (!options.g) {
-    return { "error": "Invalid argument", "message": "getGroup: options.g is required" };
+    return errorMessage("Invalid argument", "options.g is required", arguments);
+    //return { "error": "Invalid argument", "message": "getGroup: options.g is required" };
   }
   var group = ContactsApp.getContactGroup(options.g);
   if (!group) {
-    return { "error": "Not Found", "code": "404", "message": "getGroup: group not found with name : "+options.g };
+    return errorMessage("Not Found", "group not found with name ", arguments, options.g);
+    //return { "error": "Not Found", "code": "404", "message": "getGroup: group not found with name : "+options.g };
   }
   return group;
 }
