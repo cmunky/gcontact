@@ -28,8 +28,11 @@ module.exports = function(grunt) {
       gruntfile: {
         src: 'Gruntfile.js'
       },
-      lib_test: {
-        src: ['lib/**/*.js', 'test/**/*.js']
+      src: {
+        src: ['gascapi.js', 'src/*.js']
+      },
+      test: {
+        src: ['test/**/*.js']
       }
     },
     nodeunit: {
@@ -40,21 +43,33 @@ module.exports = function(grunt) {
         files: '<%= jshint.gruntfile.src %>',
         tasks: ['jshint:gruntfile']
       },
-      lib_test: {
-        files: '<%= jshint.lib_test.src %>',
-        tasks: ['jshint:lib_test', 'nodeunit']
+      test: {
+        files: '<%= jshint.test.src %>',
+        tasks: ['jshint:test', 'nodeunit']
       }
     },
     exec: {
+      script: "./config/script.id",
+      gapps: "./node_modules/.bin/gapps",
       gapps_clone: { 
         cmd: function() {
-          var fs = require('fs'),
-          scriptId = fs.readFileSync('./config/script.id').toString('UTF-8');
-          return './node_modules/.bin/gapps clone ' + scriptId;
+          var script = grunt.config('exec.script'),
+          cmd = grunt.config('exec.gapps');
+          if (!grunt.file.exists(script)) {
+            grunt.fail.fatal(script + ' not found', 404);
+          }
+          var scriptId = grunt.file.read(script);
+          return  cmd + ' clone ' + scriptId;
         }
       },
       gapps_push: { 
-        cmd: './node_modules/.bin/gapps push'
+        cmd: '<%= exec.gapps %> push'
+      },
+      some_thing: {
+        cwd: './config/', 
+        cmd: function(arg) {
+          return 'command string...' + arg;
+        }
       }
     }
   });
@@ -67,25 +82,37 @@ module.exports = function(grunt) {
 
   // Default task.
   // grunt.registerTask('default', ['jshint', 'nodeunit']);
-  grunt.registerTask('default', ['ensure_script_id', 'exec:gapps_clone']);
+  grunt.registerTask('default', ['exec:gapps_clone']);
 
-  grunt.registerTask('ensure_script_id', function() {
-    var fs = require('fs'),
-    path = './config';
-    fs.readdir( path, function( err, files ) {
-      files.forEach( function( file, index ) {
-        file = path.concat('/', file);
-        if (file.endsWith('.id')) {
-          console.log(file)
-        }
-      });
-    });
+  grunt.registerTask('custom_task_name', function() {
+
   });
 
   grunt.registerTask('readme', function() {
       var file = 'README.md',
       path = grunt.config('lib_path');
       grunt.file.write(path.concat(file), grunt.config('readme'));
+  });
+
+  grunt.registerTask('config_script', function(script) {
+     
+     grunt.file.write('./config/script.id', script);
+
+  });
+
+  grunt.registerTask('config_secret', function(secret) {
+    
+     grunt.file.copy(secret, './config/auth_secret');
+
+  });
+
+  grunt.registerTask('ensure_directories', function() {
+      if (!grunt.file.exists('config')) {
+        grunt.file.mkdir('config');
+      }
+      if (!grunt.file.exists('.credentials')) {
+        grunt.file.mkdir('.credentials');
+      }
   });
 
 };
