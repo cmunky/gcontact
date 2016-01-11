@@ -14,8 +14,8 @@ $dir = new DirectoryIterator(dirname(__FILE__).DIRECTORY_SEPARATOR . $path);
 foreach ($dir as $fileinfo) {
   if (!$fileinfo->isDot()) {
     $f = $path . DIRECTORY_SEPARATOR . $fileinfo->getFilename();
-    if (endsWith($f, '.id')) { $scriptId = file_get_contents($f); }
-    if (endsWith($f, '.json')) { $clientSecret = $f; }       
+    if (endsWith($f, 'script.id')) { $scriptId = file_get_contents($f); }
+    if (endsWith($f, 'auth_secret')) { $clientSecret = $f; }
   }
 }
 
