@@ -20,12 +20,12 @@ try:
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 except ImportError:
     flags = None
-# print(flags) 
+# print(flags)
 
 SCRIPT_ID = CLIENT_SECRET = APPLICATION_NAME = None
 
 path = './config'
-dirs = os.listdir( path )
+dirs = os.listdir(path)
 for file in dirs:
     file = os.path.join(path, file)
     if file.endswith('script.id'):
@@ -35,25 +35,28 @@ for file in dirs:
         CLIENT_SECRET = file
 
 import json
-with open('package.json') as data:    
+with open('package.json') as data:
     pkg = json.load(data)
 
 APPLICATION_NAME = "{0} ({1}-v{2})".format(pkg['description'], pkg['name'], pkg['version'])
 
+
 def ensure_credential_path():
     # --- extracted from get_credentials() ...
-    base_path = os.path.expanduser('~') # original user home dir
-    base_path = os.path.dirname(os.path.realpath(__file__)) # modified project home dir
+    base_path = os.path.expanduser('~')   # original user home dir
+    base_path = os.path.dirname(os.path.realpath(__file__))  # modified project home dir
     result = os.path.join(base_path, '.credentials')
     if not os.path.exists(result):
         os.makedirs(result)
     return result
+
 
 CREDENTIAL_PATH = os.path.join(ensure_credential_path(), 'gascapi-py.json')
 
 SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds'
 
 # print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME)
+
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -71,10 +74,11 @@ def get_credentials():
         flow.user_agent = APPLICATION_NAME
         if flags:
             credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
+        else:  # Needed only for compatibility with Python 2.6
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + CREDENTIAL_PATH)
     return credentials
+
 
 def display_error(response):
     """Displays the error results and stacktrace for an unsuccessful request
@@ -97,6 +101,7 @@ def display_error(response):
             print("\t{0}: {1}".format(trace['function'],
                 trace['lineNumber']))
 
+
 def get_service():
     # Authorize and create a service object.
     credentials = get_credentials()
@@ -104,9 +109,11 @@ def get_service():
     service = discovery.build('script', 'v1', http=http)
     return service
 
+
 def encode_result(response):
     results = response['response'].get('result', {})
     return json.dumps(results)
+
 
 def execute(request, callback):
     service = get_service()
@@ -124,24 +131,27 @@ def execute(request, callback):
         # The API encountered a problem before the script started executing.
         print(e.content)
 
+
 # --------------------
 def addContactToGroup(first_name, last_name, email, group_name):
-    request = {"function": "addContactToGroup", "parameters": 
-        [{"f": first_name, "l": last_name, "e": email   , "g": group_name, }] }
+    request = {"function": "addContactToGroup", "parameters":
+        [{"f": first_name, "l": last_name, "e": email, "g": group_name}]}
     return execute(request, encode_result)
+
 
 def getContactList(group_name):
-    request = {"function": "getContactList", "parameters": [{"g": group_name }] }
+    request = {"function": "getContactList", "parameters": [{"g": group_name}]}
     return execute(request, encode_result)
 
+
 def addContact(group_name):
-    request = {"function": "addGroup", "parameters": [{"g": group_name }] }
+    request = {"function": "addGroup", "parameters": [{"g": group_name}]}
     return execute(request, encode_result)
-# --------------------
+
 
 def main():
     # default function to verify configuration
-    print( getContactList('2011 South Calgary Garden') )
-    
+    print(getContactList('2011 South Calgary Garden'))
+
 if __name__ == '__main__':
     main()
