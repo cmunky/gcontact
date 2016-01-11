@@ -13,14 +13,15 @@ module.exports = function(grunt) {
         curly: true,
         eqeqeq: true,
         immed: true,
-        latedef: true,
+        latedef: 'nofunc',
         newcap: true,
         noarg: true,
         sub: true,
-        undef: true,
-        unused: true,
+        undef: false,  // !!
+        unused: false, // !!
         boss: true,
         eqnull: true,
+        predef: ['require', 'console', 'process'], // !!
         globals: {
           jQuery: true
         }
@@ -84,7 +85,7 @@ module.exports = function(grunt) {
   // grunt.registerTask('default', ['jshint', 'nodeunit']);
   
   grunt.registerTask('clone', ['exec:gapps_clone']);
-  grunt.registerTask('push', ['exec:gapps_clone']);
+  grunt.registerTask('push', ['exec:gapps_push']);
 
   grunt.registerTask('config_script', function(script) {
      
