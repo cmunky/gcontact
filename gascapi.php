@@ -23,6 +23,7 @@ define('SCRIPT_ID', "$scriptId");
 define('CLIENT_SECRET', "$clientSecret");
 define('CREDENTIAL_PATH', './.credentials/gascapi-php.json');
 define('SCOPES', implode(' ', array(
+  'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/script.send_mail', 'https://www.googleapis.com/auth/script.storage',
   "https://www.googleapis.com/auth/drive", "https://www.google.com/m8/feeds")
 ));
 
@@ -46,7 +47,7 @@ function getClient() {
   } else {
     // Request authorization from the user.
     $authUrl = $client->createAuthUrl();
-    printf("Open the following link in your browser:\n%s\n", $authUrl);
+    printf("Open the following link in your browser:\n\n\t%s\n\n", $authUrl);
     print 'Enter verification code: ';
     $authCode = trim(fgets(STDIN));
 
@@ -155,6 +156,6 @@ function addContactToGroup($firstName,$lastName, $email, $groupName) {
   $request = createRequest('addContactToGroup', array('f' => $firstName, 'l' => $lastName, 'e' => $email, 'g' => $groupName ));
   return execute($request, 'encodeResult');
 }
-// -----------------
 
+// -----------------
 echo getContactList('2011 South Calgary Garden');
