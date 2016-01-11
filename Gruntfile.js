@@ -82,17 +82,9 @@ module.exports = function(grunt) {
 
   // Default task.
   // grunt.registerTask('default', ['jshint', 'nodeunit']);
-  grunt.registerTask('default', ['exec:gapps_clone']);
-
-  grunt.registerTask('custom_task_name', function() {
-
-  });
-
-  grunt.registerTask('readme', function() {
-      var file = 'README.md',
-      path = grunt.config('lib_path');
-      grunt.file.write(path.concat(file), grunt.config('readme'));
-  });
+  
+  grunt.registerTask('clone', ['exec:gapps_clone']);
+  grunt.registerTask('push', ['exec:gapps_clone']);
 
   grunt.registerTask('config_script', function(script) {
      
@@ -113,6 +105,16 @@ module.exports = function(grunt) {
       if (!grunt.file.exists('.credentials')) {
         grunt.file.mkdir('.credentials');
       }
+  });
+
+  grunt.registerTask('readme', function() {
+      var file = 'README.md',
+      path = grunt.config('lib_path');
+      grunt.file.write(path.concat(file), grunt.config('readme'));
+  });
+
+  grunt.registerTask('custom_task_name', function() {
+
   });
 
 };
