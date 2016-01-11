@@ -1,5 +1,5 @@
 
-// TODO: This is really just the quickstart.... 
+// TODO: This is mostly just the quickstart.... 
 // not sure how the node/js flavor of this interface will be used
 
 var fs = require('fs');
@@ -7,7 +7,8 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
-var CLIENT_SECRET = SCRIPT_ID = APPLICATION_NAME = undefined;
+var CLIENT_SECRET, SCRIPT_ID, APPLICATION_NAME;
+CLIENT_SECRET = SCRIPT_ID = APPLICATION_NAME = undefined;
 // var SCRIPT_ID = '1fh8s_N1SYYnO_Wmx53HuLtggArgPKs-8tDbCb21bwOHCQA3Zm8wKX_-Z';
 var SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.google.com/m8/feeds' ];
 // var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
@@ -15,94 +16,21 @@ var SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.google.com/m
 var CREDENTIAL_DIR = './.credentials/';
 var CREDENTIAL_PATH = CREDENTIAL_DIR + 'gascapi-js.json';
 
-loadConfiguration();
-
-String.prototype.endsWith = function(suffix) {
-    return this.indexOf(suffix, this.length - suffix.length) !== -1;
-};
-
-function loadConfiguration() {
-  fs.readFile('package.json', function(err, content) {
-    if (err) {
-      console.log('Error loading package.json: ' + err);
-      return;
-    }
-    var pkg = JSON.parse(content);
-    APPLICATION_NAME = pkg.description.concat(' (', pkg.name, '-v',  pkg.version, ')');
-    path = './config';
-    fs.readdir( path, function( err, files ) {
-      if( err ) {
-        console.error( "Could not list the directory.", err );
-        return;
-      } 
-
-      files.forEach( function( file, index ) {
-        file = path.concat('/', file);
-        if (file.endsWith('script.id')) {
-          SCRIPT_ID = fs.readFileSync(file).toString('UTF-8');
-        }
-        if (file.endsWith('auth_secret')) {
-          CLIENT_SECRET = file
-        }
-      });
-
-      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME);
-      onConfigLoaded()
-    });
-  });
-}
-
-function onConfigLoaded() {
-  // Load client secrets from a local file.
-  fs.readFile(CLIENT_SECRET, function(err, content) {
-    if (err) {
-      console.log('Error loading client secret file: ' + err);
-      return;
-    }
-    // Authorize a client with the loaded credentials, then call the Google Apps Script Execution API.
-    authorize(JSON.parse(content), function(auth) {
-
-      execMethod(auth,
-        'getContactList', 
-        { g: '2011 South Calgary Garden' }, 
-        logResponseResult);
-
-      /*execMethod(auth,
-        'addContactToGroup', 
-        { f: 'First Name', l: 'Last Name', g: '2013 South Calgary Garden', e: 'walter.white@empire.org' }, 
-        logResponseResult);*/
-    });
-  }); 
-}
-
-function logResponseResult(resp, caption) {
-  var result = JSON.stringify(resp.response.result);
-  console.log(result);
-}
-
 /**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
+ * Store token to disk be used in later program executions.
  *
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
+ * @param {Object} token The token to store to disk.
  */
-function authorize(credentials, callback) {
-  var clientSecret = credentials.installed.client_secret;
-  var clientId = credentials.installed.client_id;
-  var redirectUrl = credentials.installed.redirect_uris[0];
-  var auth = new googleAuth();
-  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-
-  // Check if we have previously stored a token.
-  fs.readFile(CREDENTIAL_PATH, function(err, token) {
-    if (err) {
-      getNewToken(oauth2Client, callback);
-    } else {
-      oauth2Client.credentials = JSON.parse(token);
-      callback(oauth2Client);
+function storeToken(token) {
+  try {
+    fs.mkdirSync(CREDENTIAL_DIR);
+  } catch (err) {
+    if (err.code !== 'EEXIST') {
+      throw err;
     }
-  });
+  }
+  fs.writeFile(CREDENTIAL_PATH, JSON.stringify(token));
+  console.log('Token stored to ' + CREDENTIAL_PATH);
 }
 
 /**
@@ -138,29 +66,37 @@ function getNewToken(oauth2Client, callback) {
 }
 
 /**
- * Store token to disk be used in later program executions.
+ * Create an OAuth2 client with the given credentials, and then execute the
+ * given callback function.
  *
- * @param {Object} token The token to store to disk.
+ * @param {Object} credentials The authorization client credentials.
+ * @param {function} callback The callback to call with the authorized client.
  */
-function storeToken(token) {
-  try {
-    fs.mkdirSync(CREDENTIAL_DIR);
-  } catch (err) {
-    if (err.code != 'EEXIST') {
-      throw err;
+function authorize(credentials, callback) {
+  var clientSecret = credentials.installed.client_secret;
+  var clientId = credentials.installed.client_id;
+  var redirectUrl = credentials.installed.redirect_uris[0];
+  var auth = new googleAuth();
+  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
+  // Check if we have previously stored a token.
+  fs.readFile(CREDENTIAL_PATH, function(err, token) {
+    if (err) {
+      getNewToken(oauth2Client, callback);
+    } else {
+      oauth2Client.credentials = JSON.parse(token);
+      callback(oauth2Client);
     }
-  }
-  fs.writeFile(CREDENTIAL_PATH, JSON.stringify(token));
-  console.log('Token stored to ' + CREDENTIAL_PATH);
+  });
 }
 
 function execMethod(auth, name, params, callback) {
   var script = google.script('v1');
-  var request = {}
-  request.function = name
+  var request = {};
+  request.function = name;
   if(params) {
     // TODO: Ensure params is an array...
-    request.parameters = params
+    request.parameters = params;
   }
 
   // Make the API request. The request object is included here as 'resource'.
@@ -191,8 +127,68 @@ function execMethod(auth, name, params, callback) {
         }
       }
     } else {
-      callback(resp)
+      callback(resp);
     }
 
   });
 }
+
+function onConfigLoaded() {
+  // Load client secrets from a local file.
+  fs.readFile(CLIENT_SECRET, function(err, content) {
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      return;
+    }
+    // Authorize a client with the loaded credentials, then call the Google Apps Script Execution API.
+    authorize(JSON.parse(content), function(auth) {
+
+      execMethod(auth,
+        'getContactList', 
+        { g: '2011 South Calgary Garden' }, 
+        function(resp) {
+          var result = JSON.stringify(resp.response.result);
+          console.log(result);
+        });
+
+    });
+  }); 
+}
+
+function loadConfiguration() {
+  fs.readFile('package.json', function(err, content) {
+    if (err) {
+      console.log('Error loading package.json: ' + err);
+      return;
+    }
+    var path = './config',
+    pkg = JSON.parse(content);
+    APPLICATION_NAME = pkg.description.concat(' (', pkg.name, '-v',  pkg.version, ')');
+    fs.readdir( path, function( err, files ) {
+      if( err ) {
+        console.error( "Could not list the directory.", err );
+        return;
+      } 
+
+      files.forEach( function( file ) {
+        file = path.concat('/', file);
+        if (file.endsWith('script.id')) {
+          SCRIPT_ID = fs.readFileSync(file).toString('UTF-8');
+        }
+        if (file.endsWith('auth_secret')) {
+          CLIENT_SECRET = file;
+        }
+      });
+
+      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME);
+      onConfigLoaded();
+    });
+  });
+}
+
+String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
+
+// ******************
+loadConfiguration();
