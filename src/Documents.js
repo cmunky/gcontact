@@ -2,13 +2,14 @@
  *
  *
  */ 
+
 function getTemplateDocuments() {
   var response = [];
   var iterator = DriveApp.getFiles();
   
   while (iterator.hasNext()) {
     var file = iterator.next();
-    var d = file.getDescription()
+    var d = file.getDescription();
     if (d && isTemplate(d)) {
       response.push({"id": file.getId(), "name": file.getName(), "desc": d});
     }
@@ -60,6 +61,7 @@ function setTemplateCacheTimestamp(yr, m, d, h, mm, properties) {
 
 function validateTemplate(template) {
   var result = false;
+  var templateList = [];
   var props = PropertiesService.getScriptProperties();
   //setTemplateCacheTimestamp(2014, 10, 31, 4, 20, props); // to "pre age" the cache
   var maxDays = 5; // TODO: read from property!!??
@@ -68,18 +70,18 @@ function validateTemplate(template) {
     var cacheTimestamp = props.getProperty('TEMPLATE_CACHE_TIMESTAMP');
     var cacheDate = timestampToDate(cacheTimestamp);
     if (daysBetween(cacheDate, timestampToDate()) > maxDays) {
-      var templateCache = JSON.stringify(getTemplateDocuments());
+      templateCache = JSON.stringify(getTemplateDocuments());
       props.setProperty('TEMPLATE_CACHE', templateCache);
       props.setProperty('TEMPLATE_CACHE_TIMESTAMP', getTimestamp());
     }
-    var templateList = JSON.parse(templateCache);
+    templateList = JSON.parse(templateCache);
   } else { 
-    var templateList = getTemplateDocuments();   
+    templateList = getTemplateDocuments();
     props.setProperty('TEMPLATE_CACHE', JSON.stringify(templateList));
     props.setProperty('TEMPLATE_CACHE_TIMESTAMP', getTimestamp());
   }
   for (var i in templateList) {
-    var found = (templateList[i].id == template || templateList[i].name == template);
+    var found = (templateList[i].id === template || templateList[i].name === template);
     if (found) { 
       return templateList[i].id;
     }
@@ -103,7 +105,7 @@ function replaceDocumentTokens(doc, options) {
      // this ensures we don't try to the option keys for text replacements
      var found = false;
      for(var i in reserved) {
-       found = (reserved[i] == tag);
+       found = (reserved[i] === tag);
        if (found) { break; }
      }
      // TODO: How to validate options to be merged with the template

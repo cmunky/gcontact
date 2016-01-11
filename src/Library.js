@@ -1,6 +1,6 @@
 /*
- * Utility Library
- * 
+ *
+ *
  */
 
 function mailToGroup(options) {
@@ -25,7 +25,7 @@ function mailToGroup(options) {
   if (group.error) { return group; }
   var contacts = ContactsApp.getContactsByGroup(group);
   if (!contacts) {
-    return { "error": "Server Error", "code": "500", "message": "mailToGroup: could not get contacts for group with name : "+options.g } 
+    return { "error": "Server Error", "code": "500", "message": "mailToGroup: could not get contacts for group with name : "+options.g };
   }    
 // ---<
   
@@ -70,4 +70,3 @@ function mailToContact(options) {
   
   DocsList.getFileById(merge.getId()).setTrashed(true);
 }
-

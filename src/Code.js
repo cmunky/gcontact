@@ -11,13 +11,13 @@ function defaultGroup() {
 function addContactToGroup(options) {
   // TODO: Validate options, ensure non blank strings, email-ish value
   if (!options.g) {
-    return { "error": "Invalid argument", "message": "create: options.g is required" } 
+    return { "error": "Invalid argument", "message": "create: options.g is required" };
   }
   if (!options.e) {
-    return { "error": "Invalid argument", "message": "create: options.e is required" } 
+    return { "error": "Invalid argument", "message": "create: options.e is required" };
   }  
   if (!options.f || !options.l) {
-    return { "error": "Invalid argument", "message": "create: options.f and option.l are required" } 
+    return { "error": "Invalid argument", "message": "create: options.f and option.l are required" };
   }    
   return addContact(options.f, options.l, options.e, options.g);
 }
