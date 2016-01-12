@@ -1,30 +1,33 @@
-# // TODO: This is really just the quickstart....
+# // TODO: This is mostly just the quickstart....
 # // This needs to be reafactored with the functionality in ./extra/mysql2mongo.py
-# // It should also be renamed... it doesn't implement 'gascapi' integration
 # // https://github.com/google/google-api-python-client/
 
 from __future__ import print_function
-import httplib2
-import os
+
+import os, httplib2
 
 from apiclient import discovery
+from apiclient import errors
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
 
-from apiclient import errors
-
 try:
     import argparse
-    # TODO: how to specify noauth_local_webserver by default ?
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+    flags.noauth_local_webserver = True;
 except ImportError:
     flags = None
-# print(flags)
 
-SCRIPT_ID = CLIENT_SECRET = APPLICATION_NAME = None
+import json
+with open('package.json') as data:
+    pkg = json.load(data)
 
-path = './config'
+SCRIPT_ID = CLIENT_SECRET = APPLICATION_NAME = CREDENTIAL_PATH = None
+
+APPLICATION_NAME = "{0} ({1}-v{2})".format(pkg['description'], pkg['name'], pkg['version'])
+
+path = pkg['config']['config_dir']
 dirs = os.listdir(path)
 for file in dirs:
     file = os.path.join(path, file)
@@ -34,28 +37,20 @@ for file in dirs:
     if file.endswith('auth_secret'):
         CLIENT_SECRET = file
 
-import json
-with open('package.json') as data:
-    pkg = json.load(data)
+# base_path = os.path.expanduser('~')   # original user home dir
+base_path = os.path.dirname(os.path.realpath(__file__))  # modified project home dir
+result = os.path.join(base_path, pkg['config']['credential_dir'])
+if not os.path.exists(result):
+    os.makedirs(result)
+CREDENTIAL_PATH = os.path.join(result, "{0}.json".format(__file__.replace('.', '-')))
 
-APPLICATION_NAME = "{0} ({1}-v{2})".format(pkg['description'], pkg['name'], pkg['version'])
-
-
-def ensure_credential_path():
-    # --- extracted from get_credentials() ...
-    base_path = os.path.expanduser('~')   # original user home dir
-    base_path = os.path.dirname(os.path.realpath(__file__))  # modified project home dir
-    result = os.path.join(base_path, '.credentials')
-    if not os.path.exists(result):
-        os.makedirs(result)
-    return result
-
-
-CREDENTIAL_PATH = os.path.join(ensure_credential_path(), 'gascapi-py.json')
-
-SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds'
-
-# print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME)
+SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds \
+    https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/script.send_mail \
+    https://www.googleapis.com/auth/script.storage'
+  
+# print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_PATH)
+# import sys
+# sys.exit()
 
 
 def get_credentials():
@@ -103,7 +98,6 @@ def display_error(response):
 
 
 def get_service():
-    # Authorize and create a service object.
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('script', 'v1', http=http)
@@ -118,9 +112,7 @@ def encode_result(response):
 def execute(request, callback):
     service = get_service()
     try:
-        # Make the API request.
-        response = service.scripts().run(body=request,
-                scriptId=SCRIPT_ID).execute()
+        response = service.scripts().run(body=request, scriptId=SCRIPT_ID).execute()
 
         if 'error' in response:
             display_error(response)

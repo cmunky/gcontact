@@ -7,14 +7,48 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
-var CLIENT_SECRET, SCRIPT_ID, APPLICATION_NAME;
-CLIENT_SECRET = SCRIPT_ID = APPLICATION_NAME = undefined;
-// var SCRIPT_ID = '1fh8s_N1SYYnO_Wmx53HuLtggArgPKs-8tDbCb21bwOHCQA3Zm8wKX_-Z';
-var SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.google.com/m8/feeds' ];
-// var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    // process.env.USERPROFILE) + '/.credentials/';
-var CREDENTIAL_DIR = './.credentials/';
-var CREDENTIAL_PATH = CREDENTIAL_DIR + 'gascapi-js.json';
+var CLIENT_SECRET, SCRIPT_ID, APPLICATION_NAME, CREDENTIAL_PATH, CREDENTIAL_DIR;
+CLIENT_SECRET = SCRIPT_ID = APPLICATION_NAME = CREDENTIAL_PATH = CREDENTIAL_DIR = undefined;
+var SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/script.send_mail', 
+  'https://www.googleapis.com/auth/script.storage', 'https://www.googleapis.com/auth/drive', 
+  'https://www.google.com/m8/feeds' ];
+
+function loadConfiguration(callback) {
+  fs.readFile('package.json', function(err, content) {
+    if (err) {
+      console.log('Error loading package.json: ' + err);
+      return;
+    }
+
+    pkg = JSON.parse(content);
+    var path = pkg.config.config_dir;
+
+    APPLICATION_NAME = pkg.description.concat(' (', pkg.name, '-v',  pkg.version, ')');
+    CREDENTIAL_DIR = pkg.config.credential_dir;
+    CREDENTIAL_PATH = CREDENTIAL_DIR.concat('/', module.filename.split('/').pop().replace('.', '-'), '.json');
+
+    fs.readdir( path, function( err, files ) {
+      if( err ) {
+        console.error( "Could not list the directory.", err );
+        return;
+      } 
+
+      files.forEach( function( file ) {
+        file = path.concat('/', file);
+        if (file.endsWith('script.id')) {
+          SCRIPT_ID = fs.readFileSync(file).toString('UTF-8');
+        }
+        if (file.endsWith('auth_secret')) {
+          CLIENT_SECRET = file;
+        }
+      });
+
+      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_DIR, CREDENTIAL_PATH);
+      // process.exit();
+      callback();
+    });
+  });
+}
 
 /**
  * Store token to disk be used in later program executions.
@@ -155,40 +189,9 @@ function onConfigLoaded() {
   }); 
 }
 
-function loadConfiguration() {
-  fs.readFile('package.json', function(err, content) {
-    if (err) {
-      console.log('Error loading package.json: ' + err);
-      return;
-    }
-    var path = './config',
-    pkg = JSON.parse(content);
-    APPLICATION_NAME = pkg.description.concat(' (', pkg.name, '-v',  pkg.version, ')');
-    fs.readdir( path, function( err, files ) {
-      if( err ) {
-        console.error( "Could not list the directory.", err );
-        return;
-      } 
-
-      files.forEach( function( file ) {
-        file = path.concat('/', file);
-        if (file.endsWith('script.id')) {
-          SCRIPT_ID = fs.readFileSync(file).toString('UTF-8');
-        }
-        if (file.endsWith('auth_secret')) {
-          CLIENT_SECRET = file;
-        }
-      });
-
-      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME);
-      onConfigLoaded();
-    });
-  });
-}
-
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 
 // ******************
-loadConfiguration();
+loadConfiguration(onConfigLoaded);

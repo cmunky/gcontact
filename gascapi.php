@@ -7,9 +7,8 @@ set_include_path(get_include_path() . PATH_SEPARATOR . $vendor);
 require $vendor . '/autoload.php';
 
 $pkg = json_decode(file_get_contents("package.json"));
-define('APPLICATION_NAME', "$pkg->description ({$pkg->name}-v{$pkg->version})");
 
-$path = 'config';
+$path = $pkg->config->config_dir;
 $dir = new DirectoryIterator(dirname(__FILE__).DIRECTORY_SEPARATOR . $path);
 foreach ($dir as $fileinfo) {
   if (!$fileinfo->isDot()) {
@@ -19,15 +18,17 @@ foreach ($dir as $fileinfo) {
   }
 }
 
+define('APPLICATION_NAME', "$pkg->description ({$pkg->name}-v{$pkg->version})");
 define('SCRIPT_ID', "$scriptId");
 define('CLIENT_SECRET', "$clientSecret");
-define('CREDENTIAL_PATH', './.credentials/gascapi-php.json');
+define('CREDENTIAL_PATH', $pkg->config->credential_dir. DIRECTORY_SEPARATOR . str_replace('.', '-', basename(__FILE__)).'.json');
 define('SCOPES', implode(' ', array(
   'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/script.send_mail', 'https://www.googleapis.com/auth/script.storage',
   "https://www.googleapis.com/auth/drive", "https://www.google.com/m8/feeds")
 ));
 
-// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME);
+// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME . "  ". CREDENTIAL_PATH);
+// die;
 
 if (php_sapi_name() != 'cli') {
   throw new Exception('This application must be run on the command line.');
