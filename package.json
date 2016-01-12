@@ -4,6 +4,8 @@
   "description": "Google Contacts Integration",
   "main": "index.js",
   "config": {
+     "credential_dir": "./.credentials",
+     "config_dir": "./config",
      "auth_secret": "./config/auth_secret",
      "script_id": "./config/script.id"
   },
