@@ -55,7 +55,11 @@ CREDENTIAL_PATH = os.path.join(ensure_credential_path(), 'gascapi-py.json')
 
 SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds'
 
+# SCOPES = ' '.join(pkg['config']['scopes'])
+
 # print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME)
+# import sys
+# sys.exit()
 
 
 def get_credentials():

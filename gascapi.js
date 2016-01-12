@@ -107,7 +107,7 @@ function execMethod(auth, name, params, callback) {
   }, function(err, resp) {
     if (err) {
       // The API encountered a problem before the script started executing.
-      console.log('The API returned an error: ' + err);
+      console.log('The API returned an error: ' + JSON.stringify(err));
       return;
     }
     if (resp.error) {
@@ -164,6 +164,8 @@ function loadConfiguration() {
     var path = './config',
     pkg = JSON.parse(content);
     APPLICATION_NAME = pkg.description.concat(' (', pkg.name, '-v',  pkg.version, ')');
+    // SCOPES = pkg.config.scopes;
+
     fs.readdir( path, function( err, files ) {
       if( err ) {
         console.error( "Could not list the directory.", err );
@@ -179,7 +181,6 @@ function loadConfiguration() {
           CLIENT_SECRET = file;
         }
       });
-
       // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME);
       onConfigLoaded();
     });

@@ -27,7 +27,9 @@ define('SCOPES', implode(' ', array(
   "https://www.googleapis.com/auth/drive", "https://www.google.com/m8/feeds")
 ));
 
-// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME);
+// define('SCOPES', implode(' ', $pkg->config->scopes));
+
+// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME, SCOPES);
 
 if (php_sapi_name() != 'cli') {
   throw new Exception('This application must be run on the command line.');
