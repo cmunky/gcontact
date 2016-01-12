@@ -4,7 +4,8 @@
   "description": "Google Contacts Integration",
   "main": "index.js",
   "config": {
-    "auth_secret": "./config/auth_secret"
+     "auth_secret": "./config/auth_secret",
+     "script_id": "./config/script.id"
   },
   "scripts": {
     "auth": "gapps auth $npm_package_config_auth_secret -b",
