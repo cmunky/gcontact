@@ -1,13 +1,14 @@
+var readline = require('readline');
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 /*global module:false*/
 module.exports = function(grunt) {
 
-  // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    // Task configuration.
+    gapps: "./node_modules/.bin/gapps",
+
     jshint: {
       options: {
         curly: true,
@@ -50,24 +51,21 @@ module.exports = function(grunt) {
       }
     },
     exec: {
-      script: "./config/script.id",
-      gapps: "./node_modules/.bin/gapps",
       gapps_clone: { 
         cmd: function() {
-          var script = grunt.config('exec.script'),
-          cmd = grunt.config('exec.gapps');
-          if (!grunt.file.exists(script)) {
-            grunt.fail.fatal(script + ' not found', 404);
+          var opt = grunt.config.data.pkg.config;
+          if (!grunt.file.exists(opt.script_id)) {
+            grunt.fail.fatal(opt.script_id,  + ' not found', 404);
           }
-          var scriptId = grunt.file.read(script);
-          return  cmd + ' clone ' + scriptId;
+          var cmd = grunt.config('gapps');
+          return  cmd + ' clone ' + grunt.file.read(opt.script_id);
         }
       },
-      gapps_push: { 
-        cmd: '<%= exec.gapps %> push'
-      },
+      gapps_push: { cmd: '<%= gapps %> push' },
+      pylint: { cmd: 'flake8 gascapi.py' },
+      phplint: { cmd: 'php -l gascapi.php' },
       some_thing: {
-        cwd: './config/', 
+        cwd: './ pathname/',
         cmd: function(arg) {
           return 'command string...' + arg;
         }
@@ -75,47 +73,43 @@ module.exports = function(grunt) {
     }
   });
 
-  // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-exec');
 
-  // Default task.
-  // grunt.registerTask('default', ['jshint', 'nodeunit']);
-  
   grunt.registerTask('clone', ['exec:gapps_clone']);
   grunt.registerTask('push', ['exec:gapps_push']);
+  grunt.registerTask('lint', ['jshint', 'exec:phplint', 'exec:pylint']);
 
   grunt.registerTask('config_script', function(script) {
-     
-     grunt.file.write('./config/script.id', script);
-
+    if (!script) {
+      grunt.fail.fatal('Script ID argument is required - must be non-empty string');
+    }
+    var opt = grunt.config.data.pkg.config;
+    grunt.file.write(opt.script_id, script);
   });
 
   grunt.registerTask('config_secret', function(secret) {
-    
-     grunt.file.copy(secret, './config/auth_secret');
-
+    if (!secret) {
+      grunt.fail.fatal('Auth secret argument is required - must be non-empty string');
+    }
+    if (!grunt.file.exists(secret)) {
+      grunt.fail.fatal('Auth secret file argument must exist');
+    }
+    var opt = grunt.config.data.pkg.config;
+    grunt.file.copy(secret, opt.auth_secret);
   });
 
   grunt.registerTask('ensure_directories', function() {
-      if (!grunt.file.exists('config')) {
-        grunt.file.mkdir('config');
+      var createDir = function (name) {
+        if (!grunt.file.exists(name)) { grunt.file.mkdir(name); }
       }
-      if (!grunt.file.exists('.credentials')) {
-        grunt.file.mkdir('.credentials');
-      }
-  });
-
-  grunt.registerTask('readme', function() {
-      var file = 'README.md',
-      path = grunt.config('lib_path');
-      grunt.file.write(path.concat(file), grunt.config('readme'));
+      createDir('config');
+      createDir('.credentials');
   });
 
   grunt.registerTask('custom_task_name', function() {
 
   });
-
 };
