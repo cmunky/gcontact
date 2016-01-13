@@ -104,7 +104,7 @@ module.exports = function(grunt) {
   grunt.registerTask('ensure_directories', function() {
       var createDir = function (name) {
         if (!grunt.file.exists(name)) { grunt.file.mkdir(name); }
-      }
+      };
       createDir('config');
       createDir('.credentials');
   });
