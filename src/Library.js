@@ -37,7 +37,7 @@ function mailToGroup(options) {
     // Wonder if this might run afowl of googles omni-present monitoring bots?
     // Perhaps build in some kind of delay to prevent unwanted attention...      
   }
-  DocsList.getFileById(merge.getId()).setTrashed(true);
+  DriveApp.getFileById(merge.getId()).setTrashed(true);
 }
 
 function mailToContact(options) {
@@ -68,5 +68,5 @@ function mailToContact(options) {
   var body = replaceDocumentTokens(merge, options);  
   MailApp.sendEmail(options.e, subject, body.getText());
   
-  DocsList.getFileById(merge.getId()).setTrashed(true);
+  DriveApp.getFileById(merge.getId()).setTrashed(true);
 }

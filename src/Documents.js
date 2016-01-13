@@ -90,7 +90,7 @@ function validateTemplate(template) {
 }
 
 function openMergeDocument(template, options) {
-  var templateDoc = DocsList.getFileById(template);
+  var templateDoc = DriveApp.getFileById(template);
   var docName = documentName(templateDoc.getName(), options.e);
   var docId = templateDoc.makeCopy(docName).getId();
   return DocumentApp.openById(docId);
