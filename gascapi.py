@@ -3,9 +3,8 @@
 # // https://github.com/google/google-api-python-client/
 
 from __future__ import print_function
-
-import os, httplib2
-
+import os
+import httplib2
 from apiclient import discovery
 from apiclient import errors
 import oauth2client
@@ -15,7 +14,7 @@ from oauth2client import tools
 try:
     import argparse
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-    flags.noauth_local_webserver = True;
+    flags.noauth_local_webserver = True
 except ImportError:
     flags = None
 
@@ -47,7 +46,7 @@ CREDENTIAL_PATH = os.path.join(result, "{0}.json".format(__file__.replace('.', '
 SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds \
     https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/script.send_mail \
     https://www.googleapis.com/auth/script.storage'
-  
+
 # print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_PATH)
 # import sys
 # sys.exit()
