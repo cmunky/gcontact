@@ -157,3 +157,8 @@ function addContactToGroup($firstName,$lastName, $email, $groupName) {
 
 // -----------------
 echo getContactList('2011 South Calgary Garden');
+
+// function encode($response) { echo json_encode($response->getResponse()); }
+// function noop($response) { echo ''; }
+// $request = createRequest('mailToContact', array('e' => 'cmunky@uk2.net', 's' => 'Email Subject Here', 't' => 'Generic Template' ));
+// execute($request, 'encode');
