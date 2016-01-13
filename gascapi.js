@@ -7,11 +7,8 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
-var CLIENT_SECRET, SCRIPT_ID, APPLICATION_NAME, CREDENTIAL_PATH, CREDENTIAL_DIR;
-CLIENT_SECRET = SCRIPT_ID = APPLICATION_NAME = CREDENTIAL_PATH = CREDENTIAL_DIR = undefined;
-var SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/script.send_mail', 
-  'https://www.googleapis.com/auth/script.storage', 'https://www.googleapis.com/auth/drive', 
-  'https://www.google.com/m8/feeds' ];
+var CLIENT_SECRET, SCRIPT_ID, APPLICATION_NAME, CREDENTIAL_PATH, CREDENTIAL_DIR, SCOPES;
+CLIENT_SECRET = SCRIPT_ID = APPLICATION_NAME = CREDENTIAL_PATH = CREDENTIAL_DIR = SCOPES = undefined;
 
 function loadConfiguration(callback) {
   fs.readFile('package.json', function(err, content) {
@@ -20,12 +17,13 @@ function loadConfiguration(callback) {
       return;
     }
 
-    pkg = JSON.parse(content);
+    var pkg = JSON.parse(content);
     var path = pkg.config.config_dir;
 
     APPLICATION_NAME = pkg.description.concat(' (', pkg.name, '-v',  pkg.version, ')');
     CREDENTIAL_DIR = pkg.config.credential_dir;
     CREDENTIAL_PATH = CREDENTIAL_DIR.concat('/', module.filename.split('/').pop().replace('.', '-'), '.json');
+    SCOPES = pkg.config.scopes;
 
     fs.readdir( path, function( err, files ) {
       if( err ) {
@@ -43,7 +41,7 @@ function loadConfiguration(callback) {
         }
       });
 
-      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_DIR, CREDENTIAL_PATH);
+      // console.log(SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_DIR, CREDENTIAL_PATH, SCOPES);
       // process.exit();
       callback();
     });
@@ -141,7 +139,7 @@ function execMethod(auth, name, params, callback) {
   }, function(err, resp) {
     if (err) {
       // The API encountered a problem before the script started executing.
-      console.log('The API returned an error: ' + err);
+      console.log('The API returned an error: ' + JSON.stringify(err));
       return;
     }
     if (resp.error) {

@@ -42,12 +42,8 @@ result = os.path.join(base_path, pkg['config']['credential_dir'])
 if not os.path.exists(result):
     os.makedirs(result)
 CREDENTIAL_PATH = os.path.join(result, "{0}.json".format(__file__.replace('.', '-')))
-
-SCOPES = 'https://www.googleapis.com/auth/drive https://www.google.com/m8/feeds \
-    https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/script.send_mail \
-    https://www.googleapis.com/auth/script.storage'
-
-# print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_PATH)
+SCOPES = ' '.join(pkg['config']['scopes'])
+# print (SCRIPT_ID, CLIENT_SECRET, APPLICATION_NAME, CREDENTIAL_PATH, SCOPES)
 # import sys
 # sys.exit()
 

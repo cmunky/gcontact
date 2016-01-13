@@ -22,12 +22,9 @@ define('APPLICATION_NAME', "$pkg->description ({$pkg->name}-v{$pkg->version})");
 define('SCRIPT_ID', "$scriptId");
 define('CLIENT_SECRET', "$clientSecret");
 define('CREDENTIAL_PATH', $pkg->config->credential_dir. DIRECTORY_SEPARATOR . str_replace('.', '-', basename(__FILE__)).'.json');
-define('SCOPES', implode(' ', array(
-  'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/script.send_mail', 'https://www.googleapis.com/auth/script.storage',
-  "https://www.googleapis.com/auth/drive", "https://www.google.com/m8/feeds")
-));
+define('SCOPES', implode(' ', $pkg->config->scopes));
 
-// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME . "  ". CREDENTIAL_PATH);
+// print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME . "  ". CREDENTIAL_PATH . "  ". SCOPES);
 // die;
 
 if (php_sapi_name() != 'cli') {
