@@ -70,12 +70,25 @@ module.exports = function(grunt) {
           return 'command string...' + arg;
         }
       }
+    },
+    copy: {
+      config: {
+        files: [{expand: true, src: ['./config/*'], dest: 'dist/php/', filter: 'isFile'},]
+      },
+      php: {
+        files: [
+          {src: ['./gascapi.php', 'package.json'], dest: 'dist/php/', filter: 'isFile'},
+          {expand: true, src: ['./config/*'], dest: 'dist/php/', filter: 'isFile'},
+          {expand: true, src: ['./google-api-php-client/src/**'], dest: 'dist/php/'},
+        ]
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-exec');
 
   grunt.registerTask('clone', ['exec:gapps_clone']);
