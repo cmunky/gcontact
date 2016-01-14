@@ -3,7 +3,7 @@
 # // https://github.com/google/google-api-python-client/
 
 from __future__ import print_function
-import os
+import os, sys
 import httplib2
 from apiclient import discovery
 from apiclient import errors
@@ -105,6 +105,14 @@ def encode_result(response):
 
 
 def execute(request, callback):
+    if ((not CLIENT_SECRET) or  (not os.path.isfile(CLIENT_SECRET)) or (os.path.getsize(CLIENT_SECRET) < 23)):
+        print("auth_secret must exist and must not be empty")
+        sys.exit(404)
+
+    if ((not SCRIPT_ID) or len(SCRIPT_ID) < 42):
+        print("script.id must exist and must not be empty ")
+        sys.exit(404)
+
     service = get_service()
     try:
         response = service.scripts().run(body=request, scriptId=SCRIPT_ID).execute()

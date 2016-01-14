@@ -124,8 +124,14 @@ function createRequest($name, $arguments) {
 }
 
 function execute($request, $callback) {
-  $service = createService();
   try {
+    if ((!file_exists(CLIENT_SECRET)) || (filesize(CLIENT_SECRET) < 23)) {
+      throw new Exception("auth_secret must exist and must not be empty", 404);
+    }
+    if ((!SCRIPT_ID) || strlen(SCRIPT_ID) < 42) {
+      throw new Exception("script.id must exist and must not be empty ", 404);
+    }
+    $service = createService();
     $response = $service->scripts->run(SCRIPT_ID, $request);
     if (!isErrorResponse($response)) {
        return call_user_func_array($callback, array($response));
