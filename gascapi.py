@@ -105,7 +105,7 @@ def encode_result(response):
 
 
 def execute(request, callback):
-    if ((not CLIENT_SECRET) or  (not os.path.isfile(CLIENT_SECRET)) or (os.path.getsize(CLIENT_SECRET) < 23)):
+    if ((not CLIENT_SECRET) or (not os.path.isfile(CLIENT_SECRET)) or (os.path.getsize(CLIENT_SECRET) < 23)):
         print("auth_secret must exist and must not be empty")
         sys.exit(404)
 
