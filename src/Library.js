@@ -3,71 +3,65 @@
  *
  */
 
-function mailToGroup(options) {
-  if (!options.g) {
-    return errorMessage(400, "options.g is required", arguments);
-  }
-  if (!options.t) {
-    return errorMessage(400, "options.t is required", arguments);
-  }
+function documentName(templateName, email) {
+  var now = Utilities.formatDate(new Date(), "GMT", "yyMMddHHmmss");
+  var parts = [templateName, email, now];
+  return parts.join("_");  
+}
 
-//--->
-  var template = validateTemplate(options.t);
-  if (!template) {
-    return errorMessage(422, "options.t is not a valid template", arguments);
-  }
+function daysBetween(start, end) {
+  var elapsed = end.getTime() - start.getTime();  
+  return Math.floor(elapsed / (1000 * 60 * 60 * 24));
+}
 
-  // TODO: Is subject required? Should there be default subject strings for each template 
-  var subject = options.s; 
-// ---<
+function errorMessage(err, msg, fcn, opt) {
+  opt = opt || '';
+  var codes = { 500: "Server Error", 404: "Not Found", 400: "Invalid Argument", 422: "Invalid Template" };
+  var fn = fcn ? fcn.callee.toString().match(/function ([^\(]+)/)[1] : '';
+  var m = fn.concat(': ', msg, ': ', opt);
+  var o = {"error": codes[err], "message": m, "code": err };
+  return o;
+}
 
-//--->
+function getGroupContacts(options) {
   var group = getGroup(options);
   if (group.error) { return group; }
   var contacts = ContactsApp.getContactsByGroup(group);
   if (!contacts) {
     return errorMessage(500, "could not get contacts for group with name", arguments, options.g);
   }    
-// ---<
-  
-  var merge = openMergeDocument(template, options);
-  var body = replaceDocumentTokens(merge, options);
-  for (var i in contacts) {
-    var email = contacts[i].getEmails()[0].getAddress();
-    MailApp.sendEmail(email, subject, body.getText());
-    // Wonder if this might run afowl of googles omni-present monitoring bots?
-    // Perhaps build in some kind of delay to prevent unwanted attention...      
-  }
-  DriveApp.getFileById(merge.getId()).setTrashed(true);
+  return contacts;
 }
 
-function mailToContact(options) {
-  if (!options.e && !options.i) {
-    return errorMessage(400, "options.i is required", arguments);
-  }
-  if (!options.t) {
-    return errorMessage(400, "options.t is required", arguments);
-  }
-  if (options.e) {
-    var validation = getIdForEmail(options);
-    if (validation.error) { return validation; }
-  }
-  if (options.i) {
-    var response = getEmailForId(options);
-    if (response.error) { return response; } else { options.e = response.email; } 
-  }
-// >--->  
-  var template = validateTemplate(options.t);
-  if (!template) {
-    return errorMessage(422, "options.t is not a valid template", arguments);
-  }
-  // TODO: Is subject required? Should there be default subject strings for each template 
-  var subject = options.s; 
+function getTimestamp() {
+  var tz = "MDT", 
+  format = "YYYY,MM,dd,k,m,'0'";
+  return Utilities.formatDate(new Date(), tz, format);  
+}
 
-// >---> ???
-  var merge = openMergeDocument(template, options); 
-  var body = replaceDocumentTokens(merge, options);  
-  MailApp.sendEmail(options.e, subject, body.getText());
-  
-  DriveApp.getFileById(merge.getId()).setTrashed(true);
+function hoursBetween(start, end) {
+  var elapsed = end.getTime() - start.getTime();  
+  return Math.floor(elapsed / (1000 * 60 * 60));
+}
+
+function isTemplate(description) {
+  var re = /(\W|^)template(\W|$)/i;
+  return re.exec(description);
+}
+
+function makeTimestamp(y, m, d, h, mm) {
+  y = y || 2005;
+  m = (m - 1) || 7; 
+  d = d || 23;
+  h = h || 4;
+  mm = mm || 42;
+  var tz = "MDT", 
+  format = "YYYY,MM,dd,k,m,'0'";
+  return Utilities.formatDate(new Date(y, m, d, h, mm, 0), tz, format);  
+}
+
+function timestampToDate(timestamp) {
+  timestamp = timestamp || getTimestamp();
+  var ts = timestamp.split(',');  
+  return new Date(ts[0], ts[1] - 1, ts[2], ts[3], ts[4], ts[5]);
 }

@@ -3,16 +3,6 @@
  *
  */ 
 
-// TODO: Move to Library ?!?!?!
-function errorMessage(err, msg, fcn, opt) {
-  opt = opt || '';
-  var codes = { 500: "Server Error", 404: "Not Found", 400: "Invalid Argument", 422: "Invalid Template" };
-  var fn = fcn ? fcn.callee.toString().match(/function ([^\(]+)/)[1] : '';
-  var m = fn.concat(': ', msg, ': ', opt);
-  var o = {"error": codes[err], "message": m, "code": err };
-  return o;
-}
-
 function addGroup(options) {
   var group = getGroup(options);
   Logger.log(group);

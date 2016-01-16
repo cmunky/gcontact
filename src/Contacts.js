@@ -33,7 +33,6 @@ function getContact(options) {
 }
 
 function getContactList(options) {
-// >--->
   var group = getGroup(options);
   if (group.error) { return group; }
   var contacts = ContactsApp.getContactsByGroup(group);
@@ -42,7 +41,7 @@ function getContactList(options) {
   }    
   var result = [], uri = "", id = "";
   for (var i in contacts) {
-    // TODO: Should the contact list have more than name and email ?
+    // TODO: Should the contact list contain more than name and email ?
     uri = contacts[i].getId();
     id = uri.match(/\/base\/(.*)/)[1];
     result.push({
@@ -69,11 +68,10 @@ function getEmailForId(options) {
   if (!options.i) {
     return errorMessage(400, "options.i is required", arguments);
   }  
-  // var id = "http://www.google.com/m8/feeds/contacts/addr.mgr.bettercode%40gmail.com/base/" + options.i;
-  var id = getContactsUri(options.i);
-  var contact = ContactsApp.getContactById(id);
+  var uri = getContactsUri(options.i);
+  var contact = ContactsApp.getContactById(uri);
   if (!contact) {
-    return errorMessage(404, "contact not found for id : ", arguments, options.i);
+    return errorMessage(404, "contact not found for id", arguments, options.i);
   }
   if (contact) {
     return { "email" : contact.getEmails()[0].getAddress() };
