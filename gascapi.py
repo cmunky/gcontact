@@ -139,7 +139,7 @@ def getContactList(group_name):
     return execute(request, encode_result)
 
 
-def addContact(group_name):
+def addGroup(group_name):
     request = {"function": "addGroup", "parameters": [{"g": group_name}]}
     return execute(request, encode_result)
 
