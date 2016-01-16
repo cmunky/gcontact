@@ -38,7 +38,7 @@ function getContactList(options) {
   if (group.error) { return group; }
   var contacts = ContactsApp.getContactsByGroup(group);
   if (!contacts) {
-    return { "error": "Server Error", "code": "500", "message": "getContactList: could not get contacts for group with name : "+options.g };
+    return errorMessage(500, "could not get contacts for group with name ", arguments, options.g);
   }    
   var result = [], uri = "", id = "";
   for (var i in contacts) {
@@ -56,23 +56,24 @@ function getContactList(options) {
 
 function getIdForEmail(options) {
   if (!options.e) {
-    return { "error": "Invalid argument", "message": "getIdForEmail: options.e is required" };
+    return errorMessage(400, "options.e is required", arguments);
   }
   var contact = ContactsApp.getContact(options.e);
   if (!contact) {
-    return { "error": "Not Found", "code": "404", "message": "getIdForEmail: contact not found with email : "+options.e };
+    return errorMessage(404, "contact not found for email", arguments, options.e );
   }
   return { "id" : contact.getId() };
 }
 
 function getEmailForId(options) {
   if (!options.i) {
-    return { "error": "Invalid argument", "message": "getEmailForId: options.i is required" };
+    return errorMessage(400, "options.i is required", arguments);
   }  
-  var id = "http://www.google.com/m8/feeds/contacts/addr.mgr.bettercode%40gmail.com/base/" + options.i;
+  // var id = "http://www.google.com/m8/feeds/contacts/addr.mgr.bettercode%40gmail.com/base/" + options.i;
+  var id = getContactsUri(options.i);
   var contact = ContactsApp.getContactById(id);
   if (!contact) {
-    return { "error": "Not Found", "code": "404", "message": "getEmailForId: contact not found with id : "+options.i };
+    return errorMessage(404, "contact not found for id : ", arguments, options.i);
   }
   if (contact) {
     return { "email" : contact.getEmails()[0].getAddress() };
