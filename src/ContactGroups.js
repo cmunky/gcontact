@@ -25,7 +25,7 @@ function addGroup(options) {
     }
   }
   if (!group) {
-    return { "error": "Server Error", "code": "500", "message": "addGroup: could not create group with name : "+options.g };
+    return errorMessage(500, "could not create group with name", arguments, options.g);
   }  
   return { "id" : group.getId(), "name": options.g };
 }
@@ -33,14 +33,10 @@ function addGroup(options) {
 function getGroup(options) {
   if (!options.g) {
     return errorMessage(400, "options.g is required", arguments);
-    // return errorMessage("Invalid argument", "options.g is required", arguments);
-    //return { "error": "Invalid argument", "message": "getGroup: options.g is required" };
   }
   var group = ContactsApp.getContactGroup(options.g);
   if (!group) {
-    return errorMessage(400, "group not found with name ", arguments, options.g);
-    //return errorMessage("Not Found", "group not found with name ", arguments, options.g);
-    //return { "error": "Not Found", "code": "404", "message": "getGroup: group not found with name : "+options.g };
+    return errorMessage(400, "group not found with name", arguments, options.g);
   }
   return group;
 }

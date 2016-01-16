@@ -5,17 +5,18 @@
 
 function mailToGroup(options) {
   if (!options.g) {
-    return { "error": "Invalid argument", "message": "mailToGroup: options.g is required" };
+    return errorMessage(400, "options.g is required", arguments);
   }
   if (!options.t) {
-    return { "error": "Invalid argument", "message": "mailToGroup: options.t is required" };
+    return errorMessage(400, "options.t is required", arguments);
   }
 
 //--->
   var template = validateTemplate(options.t);
   if (!template) {
-    return { "error": "Invalid argument", "message": "mailToGroup: options.t is not a valid template" };
+    return errorMessage(422, "options.t is not a valid template", arguments);
   }
+
   // TODO: Is subject required? Should there be default subject strings for each template 
   var subject = options.s; 
 // ---<
@@ -25,7 +26,7 @@ function mailToGroup(options) {
   if (group.error) { return group; }
   var contacts = ContactsApp.getContactsByGroup(group);
   if (!contacts) {
-    return { "error": "Server Error", "code": "500", "message": "mailToGroup: could not get contacts for group with name : "+options.g };
+    return errorMessage(500, "could not get contacts for group with name", arguments, options.g);
   }    
 // ---<
   
@@ -42,10 +43,10 @@ function mailToGroup(options) {
 
 function mailToContact(options) {
   if (!options.e && !options.i) {
-    return { "error": "Invalid argument", "message": "mailToContact: options.e or options.i is required" };
+    return errorMessage(400, "options.i is required", arguments);
   }
   if (!options.t) {
-    return { "error": "Invalid argument", "message": "mailToContact: options.t is required" };
+    return errorMessage(400, "options.t is required", arguments);
   }
   if (options.e) {
     var validation = getIdForEmail(options);
@@ -58,7 +59,7 @@ function mailToContact(options) {
 // >--->  
   var template = validateTemplate(options.t);
   if (!template) {
-    return { "error": "Invalid argument", "message": "mailToContact: options.t is not a valid template" };
+    return errorMessage(422, "options.t is not a valid template", arguments);
   }
   // TODO: Is subject required? Should there be default subject strings for each template 
   var subject = options.s; 
