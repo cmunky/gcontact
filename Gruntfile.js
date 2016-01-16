@@ -1,4 +1,4 @@
-var readline = require('readline');
+//var readline = require('readline');
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
