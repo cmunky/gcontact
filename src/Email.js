@@ -22,16 +22,16 @@ function mailToGroup(options) {
   }
 
 //--->
-  // var template = validateTemplate(options.t);
-  // if (!template) {
-  //   return errorMessage(422, "options.t is not a valid template", arguments);
-  // }
+  var template = validateTemplate(options.t);
+  if (!template) {
+    return errorMessage(422, "options.t is not a valid template", arguments);
+  }
 
-  // // TODO: Is subject required? Should there be default subject strings for each template 
-  // var subject = options.s; 
+  // TODO: Is subject required? Should there be default subject strings for each template 
+  var subject = options.s; 
 // ---<
-  var [template, subject] = messageDetails(options);
-  if (template.error) { return template; }
+  // var [template, subject] = messageDetails(options);
+  // if (template.error) { return template; }
 
 //--->
   // var group = getGroup(options);
@@ -71,16 +71,13 @@ function mailToContact(options) {
     if (response.error) { return response; } else { options.e = response.email; } 
   }
 // >--->  
-  // var template = validateTemplate(options.t);
-  // if (!template) {
-  //   return errorMessage(422, "options.t is not a valid template", arguments);
-  // }
-  // // TODO: Is subject required? Should there be default subject strings for each template 
-  // var subject = options.s; 
+  var template = validateTemplate(options.t);
+  if (!template) {
+    return errorMessage(422, "options.t is not a valid template", arguments);
+  }
+  // TODO: Is subject required? Should there be default subject strings for each template 
+  var subject = options.s; 
 // >---> ???
-
-  var [template, subject] = messageDetails(options);
-  if (template.error) { return template; }
 
   var merge = openMergeDocument(template, options); 
   var body = replaceDocumentTokens(merge, options);  
