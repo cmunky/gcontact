@@ -128,7 +128,12 @@ def execute(request, callback):
 
 
 # --------------------
-def addContactToGroup(first_name, last_name, email, group_name):
+def addContactToGroup(person):
+    request = {"function": "addContactToGroup", "parameters": [person]}
+    return execute(request, encode_result)
+
+
+def addContactToGroupByName(first_name, last_name, email, group_name):
     request = {"function": "addContactToGroup", "parameters":
         [{"f": first_name, "l": last_name, "e": email, "g": group_name}]}
     return execute(request, encode_result)
@@ -147,6 +152,7 @@ def addGroup(group_name):
 def main():
     # default function to verify configuration
     print(getContactList('2011 South Calgary Garden'))
+
 
 if __name__ == '__main__':
     main()
