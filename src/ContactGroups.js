@@ -8,7 +8,7 @@ function addGroup(options) {
   Logger.log(group);
   if (group.error) {
     Logger.log(group.code);
-    if (group.code !== "404") {
+    if (group.code !== 400) {
       return group; 
     } else { 
       group = ContactsApp.createContactGroup(options.g);
