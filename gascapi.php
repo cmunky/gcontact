@@ -6,30 +6,43 @@ $vendor = __DIR__ . '/google-api-php-client/src/Google';
 set_include_path(get_include_path() . PATH_SEPARATOR . $vendor);
 require $vendor . '/autoload.php';
 
-$pkg = json_decode(file_get_contents("package.json"));
-
-$path = $pkg->config->config_dir;
-$dir = new DirectoryIterator(dirname(__FILE__).DIRECTORY_SEPARATOR . $path);
-foreach ($dir as $fileinfo) {
-  if (!$fileinfo->isDot()) {
-    $f = $path . DIRECTORY_SEPARATOR . $fileinfo->getFilename();
-    if (endsWith($f, 'script.id')) { $scriptId = file_get_contents($f); }
-    if (endsWith($f, 'auth_secret')) { $clientSecret = $f; }
+function configureFromPackageJson() {
+  $base = dirname(__FILE__). DIRECTORY_SEPARATOR;
+  $pkg = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "package.json"));
+  $path = $base . $pkg->config->config_dir;
+  $dir = new DirectoryIterator($path);
+  foreach ($dir as $fileinfo) {
+    if (!$fileinfo->isDot()) {
+      $f = $path . DIRECTORY_SEPARATOR . $fileinfo->getFilename();
+      if (endsWith($f, $pkg->config->script_id)) { $scriptId = file_get_contents($f); }
+      if (endsWith($f, $pkg->config->auth_secret)) { $clientSecret = $f; }
+    }
   }
+  $result = array();
+  $result['name'] = "$pkg->description ({$pkg->name}-v{$pkg->version})";
+  $result['script'] = $scriptId;
+  $result['secret'] =  $clientSecret;
+  $result['path'] = $base.$pkg->config->credential_dir. DIRECTORY_SEPARATOR . str_replace('.', '-', basename(__FILE__)).'.json';
+  $result['scopes'] = implode(' ', $pkg->config->scopes);
+  return $result;
 }
 
-define('APPLICATION_NAME', "$pkg->description ({$pkg->name}-v{$pkg->version})");
-define('SCRIPT_ID', "$scriptId");
-define('CLIENT_SECRET', "$clientSecret");
-define('CREDENTIAL_PATH', $pkg->config->credential_dir. DIRECTORY_SEPARATOR . str_replace('.', '-', basename(__FILE__)).'.json');
-define('SCOPES', implode(' ', $pkg->config->scopes));
+if (!$gascapi_config) {
+  $gascapi_config = configureFromPackageJson();
+}
+
+define('APPLICATION_NAME', $gascapi_config['name']);
+define('SCRIPT_ID', $gascapi_config['script']);
+define('CLIENT_SECRET', $gascapi_config['secret']);
+define('CREDENTIAL_PATH', $gascapi_config['path']);
+define('SCOPES', $gascapi_config['scopes']);
 
 // print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME . "  ". CREDENTIAL_PATH . "  ". SCOPES);
 // die;
 
-if (php_sapi_name() != 'cli') {
-  throw new Exception('This application must be run on the command line.');
-}
+// if (php_sapi_name() != 'cli') {
+  // throw new Exception('This application must be run on the command line.');
+// }
 
 function getClient() {
   $client = new Google_Client();
@@ -162,9 +175,4 @@ function addContactToGroup($firstName,$lastName, $email, $groupName) {
 }
 
 // -----------------
-echo getContactList('2011 South Calgary Garden');
-
-// function encode($response) { echo json_encode($response->getResponse()); }
-// function noop($response) { echo ''; }
-// $request = createRequest('mailToContact', array('e' => 'cmunky@uk2.net', 's' => 'Email Subject Here', 't' => 'Generic Template' ));
-// execute($request, 'encode');
+// echo getContactList('2016 SC Gardeners');
