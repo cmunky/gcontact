@@ -2,12 +2,38 @@
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
+String.prototype.startsWith = function(searchString, position){
+    position = position || 0;
+    return this.substr(position, searchString.length) === searchString;
+};
+String.prototype.format = function() {
+  var args = arguments;
+  return this.replace(/{(\d+)}/g, function(match, number) { 
+    return typeof args[number] != 'undefined'
+      ? args[number]
+      : match
+    ;
+  });
+};
+
+var path = require("path");
 /*global module:false*/
 module.exports = function(grunt) {
 
+  function resolvePath(opt, dir) {
+    var base = opt.config_dir,
+      result = path.join(base, dir);
+    if (dir.startsWith(base) ||
+        dir.startsWith('.') ||
+        dir.startsWith('/')) {
+        filename = dir
+    }
+    return result
+  }
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    gapps: "./node_modules/.bin/gapps",
+    gapps: path.relative("", "node_modules/.bin/gapps"),
 
     jshint: {
       options: {
@@ -53,12 +79,13 @@ module.exports = function(grunt) {
     exec: {
       gapps_clone: { 
         cmd: function() {
-          var opt = grunt.config.data.pkg.config;
-          if (!grunt.file.exists(opt.script_id)) {
-            grunt.fail.fatal(opt.script_id,  + ' not found', 404);
+          var opt = grunt.config.data.pkg.config,
+          filename = resolvePath(opt, opt.script_id);
+          if (!grunt.file.exists(filename)) {
+            grunt.fail.fatal(filename + ' not found', 404);
           }
-          var cmd = grunt.config('gapps');
-          return  cmd + ' clone ' + grunt.file.read(opt.script_id);
+          var cmd = '{0} clone {1}'.format(grunt.config('gapps'), grunt.file.read(filename));
+          return cmd;
         }
       },
       gapps_push: { cmd: '<%= gapps %> push' },
@@ -73,12 +100,12 @@ module.exports = function(grunt) {
     },
     copy: {
       config: {
-        files: [{expand: true, src: ['./config/*'], dest: 'dist/php/', filter: 'isFile'},]
+        files: [{expand: true, src: ['<%= pkg.config.config_dir %>/*'], dest: 'dist/php', filter: 'isFile'},]
       },
       php: {
         files: [
           {src: ['./gascapi.php', 'package.json'], dest: 'dist/php/', filter: 'isFile'},
-          {expand: true, src: ['./config/*'], dest: 'dist/php/', filter: 'isFile'},
+          {expand: true, src: ['<%= pkg.config.config_dir %>/*'], dest: 'dist/php/', filter: 'isFile'},
           {expand: true, src: ['./google-api-php-client/src/**'], dest: 'dist/php/'},
         ]
       }
@@ -91,34 +118,36 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-exec');
 
-  grunt.registerTask('clone', ['exec:gapps_clone']);
-  grunt.registerTask('push', ['exec:gapps_push']);
-  grunt.registerTask('lint', ['jshint', 'exec:phplint', 'exec:pylint']);
+  grunt.registerTask('clone', 'gapps clone: Copies remote source to local folder', ['exec:gapps_clone']);
+  grunt.registerTask('push', 'gapps push : Copies local source to remote Google Drive', ['exec:gapps_push']);
+  grunt.registerTask('lint', 'Lint source files', ['jshint', 'exec:phplint', 'exec:pylint']);
 
-  grunt.registerTask('config_script', function(script) {
+  grunt.registerTask('config_script', 'Creates local script.id config file', function(script) {
     if (!script) {
       grunt.fail.fatal('Script ID argument is required - must be non-empty string');
     }
-    var opt = grunt.config.data.pkg.config;
-    grunt.file.write(opt.script_id, script);
+    var opt = grunt.config.data.pkg.config,
+    filename = resolvePath(opt, opt.script_id);
+    grunt.file.write(filename, script);
   });
 
-  grunt.registerTask('config_secret', function(secret) {
+  grunt.registerTask('config_secret', 'Copies local authentication secret file', function(secret) {
     if (!secret) {
-      grunt.fail.fatal('Auth secret argument is required - must be non-empty string');
+      grunt.fail.fatal('Authentication secret : argument required - must be non-empty string');
     }
     if (!grunt.file.exists(secret)) {
-      grunt.fail.fatal('Auth secret file argument must exist');
+      grunt.fail.fatal('Authentication secret : file must exist');
     }
-    var opt = grunt.config.data.pkg.config;
-    grunt.file.copy(secret, opt.auth_secret);
+    var opt = grunt.config.data.pkg.config,
+    filename = resolvePath(opt, opt.auth_secret);
+    grunt.file.copy(secret, filename);
   });
 
-  grunt.registerTask('ensure_directories', function() {
+  grunt.registerTask('ensure_directories', 'Creates configuration directories', function() {
       var createDir = function (name) {
         if (!grunt.file.exists(name)) { grunt.file.mkdir(name); }
       };
-      createDir('config');
+      createDir('.gcontact'); // ??
       createDir('.credentials');
   });
 

@@ -12,12 +12,13 @@
       "https://www.google.com/m8/feeds"
     ],
     "credential_dir": "./.credentials",
-    "config_dir": "./config",
-    "auth_secret": "./config/auth_secret",
-    "script_id": "./config/script.id"
+    "config_dir": "./.gcontact",
+    "auth_secret": "auth_secret",
+    "script_id": "script.id"
   },
   "scripts": {
-    "auth": "gapps auth $npm_package_config_auth_secret -b",
+    "auth_unix": "gapps auth $npm_package_config_config_dir/$npm_package_config_auth_secret -b",
+    "auth_win": "gapps auth %npm_package_config_config_dir%/%npm_package_config_auth_secret% -b",
     "postinstall": "git clone -b v1-master https://github.com/google/google-api-php-client.git"
   },
   "author": "cmunky",
