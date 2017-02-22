@@ -1,5 +1,5 @@
 
-Google Contacts Integration (gcontact)
+## Google Contacts Integration (gcontact)
 
 This project consists of two installable software libaries to integrate a web application with Google Contacts.
 
@@ -17,7 +17,7 @@ There are bindings for PHP, Python and Javascript, however only the PHP is curre
 
 It is expected that users of this library are familiar with one or more programming languages and have a solid understanding of the Google OAuth flows to install and configure this integration.
 
--- Installation-- 
+### -- Installation -- 
 
 The development environment for this project requires node + npm
 It also assumes that git is available, however it is not strictly require
@@ -26,11 +26,11 @@ Get and install node + npm, if you haven't already done so
 
 Install the gcontact project source
 
-run npm install to install the project dependencies
+`run npm install to install the project dependencies`
 
-If you don't have git installed, you will need to install the google-api-php-client library manually
-
-The .zip archive can be found here: https://github.com/google/google-api-php-client/archive/v1-master.zip
+> If you don't have git installed, you will need to install the google-api-php-client library manually
+> 
+> The .zip archive can be found here: https://github.com/google/google-api-php-client/archive/v1-master.zip
 
 Login to the Google account which will host the integration libary
 
@@ -88,39 +88,36 @@ Now we turn our attention to configuring the development environment to interact
 
 The installation process installed a task runner to make this task a bit simpler
 
-run grunt config_script <script-id>
+`run grunt config_script <script-id>`
 
 This will create a configuration file containing script id provided
 
-run grung config_auth <path-to-json-credentials-file>
+`run grung config_auth <path-to-json-credentials-file>`
 
 This will copy the credentials file to our local configuration path
 
-run grunt auth 
+`run grunt auth `
 
 This will attempt to authenticate the OAuth key with Google 
 
-   This will likely have more steps
-   We will need to navigate to an auth page, grant permissions, 
-   and then copy the resulting response key back into our configuration
+-   This will likely have more steps
+-   We will need to navigate to an auth page, grant permissions, 
+-   and then copy the resulting response key back into our configuration
 
 
+> `git clone -b v1-master https://github.com/google/google-api-php-client.git`
+> `https://github.com/google/google-api-php-client/archive/v1-master.zip`
 
+#### TODO - Move this to another file !!!
 
-
-git clone -b v1-master https://github.com/google/google-api-php-client.git
-https://github.com/google/google-api-php-client/archive/v1-master.zip
-
-# TODO - Move this to another file !!!
-
-- additional tasks and aliases required to build an installable PHP archive
-- update and test the 'gardens' implementation of the PHP gcontact library
-- additional testing of the installation process described in the README
-- proof read and refine the README document
-- gather screencaps for the installation process, crop and annotate, include in README
-- design and implement an installable Python gcontact library
-- design and implement an installable Javascript gcontact library
-- determine what to do with the mysql3mongo.py script... why is it in this project?
-- consider and research an OAuth flow that can be integrated with a web application
+- [ ] additional tasks and aliases required to build an installable PHP archive
+- [ ] update and test the 'gardens' implementation of the PHP gcontact library
+- [ ] additional testing of the installation process described in the README
+- [ ] proof read and refine the README document
+- [ ] gather screencaps for the installation process, crop and annotate, include in README
+- [ ] design and implement an installable Python gcontact library
+- [ ] design and implement an installable Javascript gcontact library
+- [ ] determine what to do with the mysql3mongo.py script... why is it in this project?
+- [ ] consider and research an OAuth flow that can be integrated with a web application
   * the use case here is to allow the 'gardens' admins to authorize a new token from an SPA
-- build out test harness to exercise library bindings
+- [ ] build out test harness to exercise library bindings
