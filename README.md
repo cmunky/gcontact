@@ -76,9 +76,17 @@ Select 'Other' radio button and provide a useful name for the credentals
 
 Naming the credentials 'Google Contacts Integration (gcontact)' is again suggested for clarity and consistency.
 
-Click on the name of the credintial you just created to have the details of that credential displayed.
+Click on the name of the credential you just created to have the details of that credential displayed.
 
 Click the [Download JSON] button and the credentials will be saved to wherever your browser puts downloaded files
+
+Still on the tab containing the Google API Manager
+
+On the left side of the page, click on the [Library] menu choice
+
+On the page that appears, type 'Apps Script' in the search edit field and it should be the first result
+
+Click on Google Apps Script Execution API link, and then click the 'Enable' button on the resultin page
 
 You have now configured the libary host file and generated the credentials to interoperate with the Google account
 
