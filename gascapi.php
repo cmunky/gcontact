@@ -6,29 +6,15 @@ $vendor = __DIR__ . '/google-api-php-client/src/Google';
 set_include_path(get_include_path() . PATH_SEPARATOR . $vendor);
 require $vendor . '/autoload.php';
 
-function configureFromPackageJson() {
-  $base = dirname(__FILE__). DIRECTORY_SEPARATOR;
-  $pkg = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "package.json"));
-  $path = $base . $pkg->config->config_dir;
-  $dir = new DirectoryIterator($path);
-  foreach ($dir as $fileinfo) {
-    if (!$fileinfo->isDot()) {
-      $f = $path . DIRECTORY_SEPARATOR . $fileinfo->getFilename();
-      if (endsWith($f, $pkg->config->script_id)) { $scriptId = file_get_contents($f); }
-      if (endsWith($f, $pkg->config->auth_secret)) { $clientSecret = $f; }
-    }
-  }
-  $result = array();
-  $result['name'] = "$pkg->description ({$pkg->name}-v{$pkg->version})";
-  $result['script'] = $scriptId;
-  $result['secret'] =  $clientSecret;
-  $result['path'] = $base.$pkg->config->credential_dir. DIRECTORY_SEPARATOR . str_replace('.', '-', basename(__FILE__)).'.json';
-  $result['scopes'] = implode(' ', $pkg->config->scopes);
-  return $result;
-}
-
 if (!$gascapi_config) {
-  $gascapi_config = configureFromPackageJson();
+  if (!$config_file) { $config_file = null; }
+  $gascapi_config = configureFromConf($config_file);
+  if (!$gascapi_config) {
+     $gascapi_config = configureFromPackageJson();
+  }
+  if (!$gascapi_config) {
+    throw new Exception('Could not find suitable application configuration');
+  }
 }
 
 define('APPLICATION_NAME', $gascapi_config['name']);
@@ -40,9 +26,56 @@ define('SCOPES', $gascapi_config['scopes']);
 // print (SCRIPT_ID . "  ". CLIENT_SECRET . "  ". APPLICATION_NAME . "  ". CREDENTIAL_PATH . "  ". SCOPES);
 // die;
 
-// if (php_sapi_name() != 'cli') {
-  // throw new Exception('This application must be run on the command line.');
-// }
+function configureFromConf($filename) {
+  $base = __DIR__ . DIRECTORY_SEPARATOR;
+  $_gcontact = $base . '.gcontact' . DIRECTORY_SEPARATOR;
+  $filename = is_null($filename) ? basename(__FILE__, '.php').'.conf' : $filename;
+  $conf = json_decode(@file_get_contents($base . $filename)); // assumes local path !!
+  if ($conf) {
+    $result = array();
+    $result['name'] = $conf->name;
+    $result['script'] = $conf->script;
+    $result['secret'] = $_gcontact . $conf->secret;
+    $result['path'] = $_gcontact . str_replace('.', '-', basename(__FILE__)).'.token';
+    $result['scopes'] = implode(' ', $conf->scopes);
+  }
+  return $result;
+}
+
+function configureFromPackageJson() {
+  $base = __DIR__ . DIRECTORY_SEPARATOR;
+  $_gcontact = $base . '.gcontact' . DIRECTORY_SEPARATOR;
+  $pkg = json_decode(file_get_contents($base . "package.json"));
+
+  $result = array();
+  $result['name'] = "$pkg->description ({$pkg->name}-v{$pkg->version})";
+  $result['script'] = $pkg->config->script;
+  $result['secret'] = $base . $pkg->config->secret; // assumes local path
+  $result['path'] = $_gcontact . str_replace('.', '-', basename(__FILE__)).'.token';
+  $result['scopes'] = implode(' ', $pkg->config->scopes);
+  return $result;
+}
+
+function requestUserAuthorization($client, $credentialsPath) {
+  if (php_sapi_name() != 'cli') {
+    throw new Exception('Run this module (gascapi.php) from the command line for user authorization.');
+  }
+  $authUrl = $client->createAuthUrl();
+  printf("Open the following link in your browser:\n\n\t%s\n\n", $authUrl);
+  print 'Enter verification code: ';
+  $authCode = trim(fgets(STDIN));
+
+  // Exchange authorization code for an access token.
+  $accessToken = $client->authenticate($authCode);
+
+  // Store the credentials to disk.
+  if(!file_exists(dirname($credentialsPath))) {
+    mkdir(dirname($credentialsPath), 0700, true);
+  }
+  file_put_contents($credentialsPath, $accessToken);
+  printf("Credentials saved to %s\n", $credentialsPath);
+  return $accessToken;
+}
 
 function getClient() {
   $client = new Google_Client();
@@ -57,8 +90,8 @@ function getClient() {
     $accessToken = file_get_contents($credentialsPath);
   } else {
     // Request authorization from the user.
-    $authUrl = $client->createAuthUrl();
-    printf("Open the following link in your browser:\n\n\t%s\n\n", $authUrl);
+    $accessToken = requestUserAuthorization($client, $credentialsPath);
+    /*printf("Open the following link in your browser:\n\n\t%s\n\n", $authUrl);
     print 'Enter verification code: ';
     $authCode = trim(fgets(STDIN));
 
@@ -70,7 +103,7 @@ function getClient() {
       mkdir(dirname($credentialsPath), 0700, true);
     }
     file_put_contents($credentialsPath, $accessToken);
-    printf("Credentials saved to %s\n", $credentialsPath);
+    printf("Credentials saved to %s\n", $credentialsPath);*/
   }
   $client->setAccessToken($accessToken);
 
@@ -109,14 +142,18 @@ function isErrorResponse($response) {
     // stack trace elements.
     $error = $response->getError();
     $details = $error['details'][0];
-    printf("Script error message: %s\n", $details['errorMessage']);
+    if (php_sapi_name() != 'cli') {
+      printf("Script error message: %s\n", $details['errorMessage']);
 
-    if (array_key_exists('scriptStackTraceElements', $details)) {
-      // There may not be a stacktrace if the script didn't start executing.
-      print "Script error stacktrace:\n";
-      foreach($details['scriptStackTraceElements'] as $trace) {
-        printf("\t%s: %d\n", $trace['function'], $trace['lineNumber']);
+      if (array_key_exists('scriptStackTraceElements', $details)) {
+        // There may not be a stacktrace if the script didn't start executing.
+        print "Script error stacktrace:\n";
+        foreach($details['scriptStackTraceElements'] as $trace) {
+          printf("\t%s: %d\n", $trace['function'], $trace['lineNumber']);
+        }
       }
+    } else {
+      throw new Exception('Error occured in gascapi.php : '.json_encode($details));
     }
   }
   return $result;
