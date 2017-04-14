@@ -11,14 +11,14 @@
       "https://www.googleapis.com/auth/drive",
       "https://www.google.com/m8/feeds"
     ],
-    "credential_dir": "./.credentials",
-    "config_dir": "./.gcontact",
-    "auth_secret": "auth_secret",
-    "script_id": "script.id"
+    "secret": "auth/client_secret_1004505911489-jct5kacguqi504kpj6p5ld625tkugv4a.apps.googleusercontent.com.json",
+    "config_path": ".gcontact",
+    "script": "1fh8s_N1SYYnO_Wmx53HuLtggArgPKs-8tDbCb21bwOHCQA3Zm8wKX_-Z"
   },
   "scripts": {
-    "auth_unix": "gapps auth $npm_package_config_config_dir/$npm_package_config_auth_secret -b",
-    "auth_win": "gapps auth %npm_package_config_config_dir%/%npm_package_config_auth_secret% -b",
+    "auth": "gapps auth",
+    "auth_auto": "gapps auth $npm_package_config_secret -b",
+    "auth_auto_win": "gapps auth %npm_package_config_secret% -b",
     "postinstall": "git clone -b v1-master https://github.com/google/google-api-php-client.git"
   },
   "author": "cmunky",
@@ -33,10 +33,11 @@
   },
   "devDependencies": {
     "grunt": "~0.4.5",
-    "grunt-exec": "~0.4.6",
     "grunt-contrib-copy": "^0.8.2",
     "grunt-contrib-jshint": "~0.10.0",
+    "grunt-contrib-nodeunit": "~0.4.1",
     "grunt-contrib-watch": "~0.6.1",
-    "grunt-contrib-nodeunit": "~0.4.1"
+    "grunt-exec": "~0.4.6",
+    "grunt-prompt": "^1.3.3"
   }
 }
