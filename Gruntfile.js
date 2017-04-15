@@ -20,8 +20,13 @@ var path = require("path");
 /*global module:false*/
 module.exports = function(grunt) {
 
+  function configValue(name, def) {
+    return grunt.file.exists('.gapps_remote') ? 
+      grunt.file.readJSON('.gapps_remote')[name] : def;
+
+  }
   function resolvePath(dir) {
-    var base = grunt.config.data.pkg.config.config_path || '.gcontact',
+    var base = grunt.config('config_path') || '.gcontact',
       result = path.join(base, dir);
     if (dir.startsWith(base) ||
         dir.startsWith('.') ||
@@ -42,8 +47,7 @@ module.exports = function(grunt) {
               config: 'config_path', 
               type: 'input',
               message: 'Enter the path to save the local configuration files: ', 
-              default: '.gcontact'
-              // default: function() { return grunt.config.data.pkg.config["config_path"];
+              default: configValue('config_path', '.gcontact')
             }
           ]
         }
@@ -55,7 +59,7 @@ module.exports = function(grunt) {
               config: 'script_id', 
               type: 'input', 
               message: 'Enter the scriptId from the remote server: ',
-              default: function() { return grunt.config.data.pkg.config["script"]; }
+              default: configValue('script')
             }
           ]
         }
@@ -79,7 +83,7 @@ module.exports = function(grunt) {
               config: 'auth_secret',
               type: 'input', 
               message: 'Enter the path to the authentication secret from the remote server: ',
-              default: function() { return grunt.config.data.pkg.config["secret"]; }
+              default: configValue('secret')
             }
           ]
         }
@@ -128,9 +132,9 @@ module.exports = function(grunt) {
       }
     },
     exec: {
-      gapps_clone_auto: { 
+      gapps_clone_config: { 
         cmd: function() {
-          return '{0} clone {1}'.format(grunt.config('gapps'), grunt.config.data.pkg.config.script);
+          return '{0} clone {1}'.format(grunt.config('gapps'), grunt.config('script'));
         }
       },
       gapps_clone: { 
@@ -154,7 +158,12 @@ module.exports = function(grunt) {
     },
     copy: {
       config: {
-        files: [{expand: true, src: ['<%= pkg.config.config_path %>/*'], dest: '<%= dist_path %>' , filter: 'isFile'},]
+        files: [{expand: true, src: ['<%= config_path %>/*'], dest: '<%= dist_path %>' , filter: 'isFile'},]
+      },
+      secret: {
+        files: [
+          {src: ['<%= secret %>'], dest: '<%= config_secret %>', filter: 'isFile'}
+        ]
       },
       php: {
         files: [
@@ -165,7 +174,8 @@ module.exports = function(grunt) {
       },
       python: {
         files: [
-          {src: ['./gascapi.py'], dest: '<%= dist_path %>', filter: 'isFile'}
+          {src: ['./gascapi.py'], dest: '<%= dist_path %>', filter: 'isFile'},
+          {src: ['./gascapi.conf'], dest: '<%= dist_path %>', filter: 'isFile'},
         ]
       }
     }
@@ -178,53 +188,75 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-prompt');
   grunt.loadNpmTasks('grunt-exec');
 
-  grunt.registerTask('clone', 'gapps clone: Copies remote source to local folder', ['exec:gapps_clone']);
+  grunt.registerTask('clone', 'gapps clone: Copies remote source to local folder', ['init', 'exec:gapps_clone_config']);
   grunt.registerTask('push', 'gapps push : Copies local source to remote Google Drive', ['exec:gapps_push']);
   grunt.registerTask('lint', 'Lint source files', ['jshint', 'exec:phplint', 'exec:pylint']);
 
-  grunt.registerTask('copy_cfg', '', ['prompt:get_dist_path', 'copy_secret_auto', 'copy:config']);
-  grunt.registerTask('copy_php', '', ['copy_cfg', 'copy:php']);
-  grunt.registerTask('copy_python', '', ['copy_cfg', 'copy:python']);
+  grunt.registerTask('dist_config', 'Initialize and copy config files to distribution', 
+      ['init', 'prompt:get_dist_path', 'copy:secret', 'copy:config']);
 
   grunt.registerTask('configure', 'Configure development environment',
-    ['prompt:get_config_path', 'prompt:get_secret', 'prompt:get_script', 'update_pkg_json']);
+      ['prompt:get_config_path', 'prompt:get_secret', 'prompt:get_script', 'update_remote', 'init']);
 
-  grunt.registerTask('dootherstuff', '', function (arg) {
+  grunt.registerTask('some_thing', '', function (arg) {
       var createDir = function (name) {
         if (!grunt.file.exists(name)) { grunt.file.mkdir(name); }
       };
-
   });
 
-  grunt.registerTask('chkconfig', 'Check the package.json for scriptId and authentication secret', function () {
-    var opt = grunt.config.data.pkg.config;
-    if (!opt["secret"] || !opt["script"] || !opt["config_path"]) {
-      grunt.task.run('configure');
+  grunt.registerTask('dist', 'Copy application files to distribution directory', function (arg) {
+    switch(arg){
+      case 'cfg' : 
+        grunt.task.run('dist_config');
+        break;
+      case 'php' : 
+        grunt.task.run('dist_config', 'copy:php');
+        break;
+      case 'python' : 
+        grunt.task.run('dist_config', 'copy:pythom');
+        break;
+      case 'js' : grunt.fail.fatal('not implemented'); break;
+      default: grunt.fail.fatal('dist requires argement - one of [cfg, php, python, js]');
     }
   });
 
-  grunt.registerTask('update_pkg_json', 'Update package.json file with scriptId and authentication secret', function () {
-    var package_json  =  grunt.file.readJSON('package.json');
-    package_json['config']['config_path'] = grunt.config('config_path');
-    package_json['config']['script'] = grunt.config('script_id');
-    package_json['config']['secret'] = grunt.config('auth_secret');
-    grunt.file.write('package.json', JSON.stringify(package_json, null, 2));
+  grunt.registerTask('init', 'Initialize configuration options', function () {
+    var pkg_path = grunt.config.data.pkg.config["config_path"];
+    if (!grunt.file.exists('.gapps_remote')) {
+      grunt.task.run('configure');
+    } else {
+      gapps_remote = grunt.file.readJSON('.gapps_remote');
+      grunt.config('config_path', pkg_path || gapps_remote["config_path"] || '.gcontact');
+      grunt.config('script', gapps_remote["script"]);
+      grunt.config('secret', gapps_remote["secret"]);
+      grunt.config('config_secret', resolvePath(path.basename(grunt.config('secret'))));
+    }
+  });
+
+  grunt.registerTask('update_remote', 'Update .gapps_remote configuration with scriptId and authentication secret', function () {
+    var gapps_remote = {
+      config_path: grunt.config('config_path'),
+      script: grunt.config('script_id'),
+      secret: grunt.config('auth_secret')
+    };
+    grunt.file.write('.gapps_remote', JSON.stringify(gapps_remote, null, 2));
+    // Writing the secret to the package.json to enable simpler command line : `npm run auth_auto` 
+    // The alternative command line looks like: `npm run auth -- <path/to/client/secret.json> -b`
+    var pkg = grunt.file.readJSON('package.json');
+    pkg['config']['secret'] = grunt.config('auth_secret');
+    grunt.file.write('package.json', JSON.stringify(pkg, null, 2));
   });
 
   grunt.registerTask('mkconfig', 'Creates configuration file for application bindings', function (configFile) {
     if (!configFile) {
       grunt.fail.fatal('Configuration file : argument required - must be non-empty string');
     }
-    var pkg = grunt.config.data.pkg, opt = pkg.config;
-    opt["name"] = '{0} ({1}-v{2})'.format(pkg.description, pkg.name, pkg.version);
-    opt["secret"] = path.basename(opt["secret"]);
-    grunt.file.write(configFile, JSON.stringify(opt, null, 2));
-  });
-
-  grunt.registerTask('copy_secret_auto', 'Copies local authentication secret file from configuration', function() {
-    var secret = grunt.config.data.pkg.config.secret,
-    target = resolvePath(path.basename(secret));
-    grunt.file.copy(secret, target);
+    var pkg = grunt.config.data.pkg, 
+    cfg = grunt.file.readJSON('.gapps_remote');
+    cfg["scopes"] = pkg.config.scopes;
+    cfg["name"] = '{0} ({1}-v{2})'.format(pkg.description, pkg.name, pkg.version);
+    cfg["secret"] = path.basename(cfg["secret"]);
+    grunt.file.write(configFile, JSON.stringify(cfg, null, 2));
   });
 
   grunt.registerTask('copy_secret', 'Copies local authentication secret file from argument', function(secret) {
