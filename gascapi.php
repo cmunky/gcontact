@@ -29,8 +29,10 @@ define('SCOPES', $gascapi_config['scopes']);
 function configureFromConf($filename) {
   $base = __DIR__ . DIRECTORY_SEPARATOR;
   $_gcontact = $base . '.gcontact' . DIRECTORY_SEPARATOR;
-  $filename = is_null($filename) ? basename(__FILE__, '.php').'.conf' : $filename;
-  $conf = json_decode(@file_get_contents($base . $filename)); // assumes local path !!
+  $filename = is_null($filename) ? $base . basename(__FILE__, '.php').'.conf' : $filename;
+  $filename = !file_exists($filename) ? $_gcontact . basename(__FILE__, '.php').'.conf' : $filename;
+
+  $conf = json_decode(@file_get_contents($filename));
   if ($conf) {
     $result = array();
     $result['name'] = $conf->name;
@@ -45,14 +47,16 @@ function configureFromConf($filename) {
 function configureFromPackageJson() {
   $base = __DIR__ . DIRECTORY_SEPARATOR;
   $_gcontact = $base . '.gcontact' . DIRECTORY_SEPARATOR;
-  $pkg = json_decode(file_get_contents($base . "package.json"));
 
-  $result = array();
-  $result['name'] = "$pkg->description ({$pkg->name}-v{$pkg->version})";
-  $result['script'] = $pkg->config->script;
-  $result['secret'] = $base . $pkg->config->secret; // assumes local path
-  $result['path'] = $_gcontact . str_replace('.', '-', basename(__FILE__)).'.token';
-  $result['scopes'] = implode(' ', $pkg->config->scopes);
+  $pkg = json_decode(@file_get_contents($base . "package.json"));
+  if ($pkg) {
+    $result = array();
+    $result['name'] = "$pkg->description ({$pkg->name}-v{$pkg->version})";
+    $result['script'] = $pkg->config->script;
+    $result['secret'] = $base . $pkg->config->secret; // assumes local path
+    $result['path'] = $_gcontact . str_replace('.', '-', basename(__FILE__)).'.token';
+    $result['scopes'] = implode(' ', $pkg->config->scopes);
+  }
   return $result;
 }
 
@@ -210,6 +214,3 @@ function addContactToGroup($firstName,$lastName, $email, $groupName) {
   $request = createRequest('addContactToGroup', array('f' => $firstName, 'l' => $lastName, 'e' => $email, 'g' => $groupName ));
   return execute($request, 'encodeResult');
 }
-
-// -----------------
-// echo getContactList('2016 SC Gardeners');
